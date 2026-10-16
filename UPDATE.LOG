@@ -1,0 +1,313 @@
+DIAMOND TD MACRO - UPDATE LOG
+=============================
+
+v1.0 - Initial State
+- Base macro with TDS mode, custom mode, hybrid mode
+- Image detection for Restart, Ready, Play Again
+- Pixel/veto detection
+- Recovery/rejoin behavior
+- FPS tools, statistics, profiles, templates
+- Dependency setup, EXE builder
+- Diamond branding
+
+v1.1 - Statistics Fix
+- Fixed statistics counter: failed runs no longer count coins/XP
+- Only successful runs add to totals
+- Separates wins from losses properly
+
+v1.2 - Performance Profiler
+- Added performance profiler
+- Tracks timing for each operation
+- Generates report at end of session
+- Shows which operations are slowest
+- Setting: performance_profiler
+
+v1.3 - Multi-Profile Hot Swapping
+- Added F11 to swap to profile 1
+- Added F12 to swap to profile 2
+- Instant profile switching mid-game
+- Settings: hot_swap_profiles, hot_swap_profile_1, hot_swap_profile_2
+
+v1.4 - Wave Prediction System
+- Added basic wave prediction based on time
+- Estimates current wave number
+- Setting: wave_prediction
+
+v1.5 - Auto-Economy Management
+- Tracks coin income rate
+- Suggests tower sales if rate is low
+- Setting: auto_economy
+
+v1.6 - Tower Placement Suggestions
+- Framework for map-based suggestions
+- Database integration ready
+- Setting: tower_suggestions
+
+v1.7 - Discord Notifications
+- Sends session reports to Discord
+- Optional screenshots
+- Webhook-based
+- Settings: discord_notifications, discord_webhook, discord_screenshots
+- Dependency: requests
+
+v1.8 - Map Database
+- Save/load strategies per map
+- JSON-based storage
+- Setting: map_database
+
+v1.9 - Gemini 2.5 Flash AI Advisor
+- Runs after each match completes
+- Sends stats to Gemini
+- Gets 3 improvement suggestions
+- Saves suggestions to file
+- Settings: gemini_advisor, gemini_api_key
+- Dependency: google-generativeai
+
+v1.10 - Tesseract Auto-Install
+- Automatically downloads and installs Tesseract OCR
+- No manual installation needed
+- Required for upgrade adaptation system
+
+v1.11 - Automated Upgrade Adaptation System
+- Full tower upgrade system
+- OCR-based level reading (Lv. 0-7)
+- Prioritizes Level 1 first, then Level 2, etc.
+- 0.2s cycle time per tower
+- 15-pixel search pattern to find tower UI
+- Green/gray pixel detection for upgrade availability
+- Settings: auto_upgrade_system, max_upgrade_level, upgrade_pixel_green, upgrade_pixel_gray, upgrade_pixel_x, upgrade_pixel_y, tower_search_radius, upgrade_cycle_time
+- Images: your_tower.png, lv_0.png through lv_7.png, upgrade_green.png, upgrade_gray.png
+
+v1.12 - Adaptive Lag Compensation
+- Measures ping to Roblox servers every 60 seconds
+- Automatically adjusts ALL timings based on latency
+- 50ms = 1.0x, 100ms = 2.0x multiplier (capped at 4.0x)
+- Settings: lag_compensation, lag_multiplier
+
+v1.13 - Visual Strategy Overlay
+- Expanded Mahoraga overlay to show tower spots, enemy paths, next moves
+- Functions: add_tower_spot(), set_enemy_path(), set_next_move(), show_strategy()
+- Settings: strategy_overlay, overlay_tower_spots, overlay_paths, overlay_next_move
+
+v1.14 - Voice Control
+- Windows Speech Recognition integration
+- Commands: "start macro", "stop macro", "skip run" (customizable)
+- Settings: voice_control, voice_start, voice_stop, voice_skip
+- Dependencies: SpeechRecognition, PyAudio
+
+v1.15 - Anti-Detection Humanizer
+- Random delay variation on all sleeps
+- Random mouse jitter on clicks
+- Random click timing variation
+- Settings: humanizer, humanizer_delay_range, humanizer_mouse_jitter, humanizer_click_variation
+
+v1.16 - Replay Heatmap Generator
+- Tracks all clicks and tower placements
+- Generates visual heatmap image at end of session
+- Shows click positions (green dots) and tower spots (blue circles)
+- Settings: heatmap_enabled, heatmap_show_clicks, heatmap_show_towers
+
+v1.17 - Profit Calculator
+- Calculates electricity cost based on PC power usage
+- Calculates profit/hour from game coins
+- Tracks ROI and saves profit history
+- Settings: profit_calculator, electricity_cost_kwh, pc_power_watts, coin_value_usd
+
+v1.18 - Auto-Screencast Recorder
+- Records highlight clips on wins and high scores
+- Saves as MP4 videos
+- Settings: screencast_recorder, screencast_on_win, screencast_on_high_score, screencast_threshold_coins, screencast_duration
+
+v1.19 - Account Health Monitor
+- Tracks "human-like" score based on play patterns
+- Auto-cooldown when score drops below threshold
+- Prevents 24/7 botting
+- Settings: account_health_monitor, health_cooldown_minutes, health_warning_threshold
+
+v1.20 - Real-Time Strategy Switcher
+- Automatically switches to backup profile after X consecutive failures
+- Detects when current strategy isn't working
+- Settings: strategy_switcher, strategy_fail_threshold, backup_profile
+
+v1.21 - Cloud Profile Marketplace (GitHub Gist)
+- Upload profiles to GitHub Gist
+- Download profiles from Gist URLs
+- Share strategies with community
+- Settings: cloud_profiles, github_token
+- Dependency: requests
+
+v1.22 - Ability Spam System
+- Automatically spams tower abilities
+- Configurable interval
+- Background thread
+- Setting: ability_spam, ability_spam_interval
+
+v1.23 - Hotbar Click Selection
+- Select slots by clicking instead of keys
+- Scaled coordinates
+- Setting: hotbar_click_select
+
+v1.24 - Tower UI Caching
+- Caches menu position for faster access
+- 30-second cache validity
+- Setting: tower_ui_cache
+
+v1.25 - Big Dick Randy Mode
+- Uses big_dick_randy.png and big_dick_randy.wav
+- Random appearances every 5-15 minutes
+- Impossible to disable (stop function does nothing, non-daemon thread)
+- Random position on screen
+- Fade in/out effects
+- Audio playback on appearance
+- Log messages: "💀 BIG DICK RANDY IS COMING FOR THAT ASS 💀", "Big Dick Randy returned to the shadows..."
+- Settings: big_dick_randy_mode, bdr_min_interval, bdr_max_interval, bdr_duration
+- Dependencies: pygame
+
+v1.26 - Veto Behavior Fix
+- First veto: Click veto once, wait 0.3s, click veto again, redo map selection
+- Second veto: Do NOT click veto again, use ESC, L, ENTER (0.15s delay each)
+- This is an alternative to full rejoin protocol
+
+v1.27 - Leave Detection Fix
+- After clicking Leave, waits for blue Play triangle
+- Clicks it 3 times (0.3s delay between clicks)
+- Then waits for green PLAY
+- Then gamemode selection and Ready
+
+v1.28 - Second Veto Logic Fix
+- Removed veto clicking after second detection
+- Goes directly to ESC, L, ENTER sequence
+- Makes sense since you're leaving anyway
+
+v1.29 - Dependency Updates
+- Updated requirements.txt with all new dependencies
+- Updated Diamond_TD_Macro.bat to install: SpeechRecognition, PyAudio, requests, pytesseract, google-generativeai, rembg, onnxruntime, pygame
+- Updated Build_EXE.bat to bundle all new dependencies
+
+v1.30 - Build_EXE.bat Updates
+- Updated to stage and copy Big Dick Randy assets (big_dick_randy.png, big_dick_randy.wav)
+- Added to PyInstaller hidden imports/collection for rembg, onnxruntime, PyQt5, PIL, winsdk
+
+v1.31 - Image Naming and Restoration
+- Renamed level images to correct names: lv_0.png through lv_7.png
+- Renamed upgrade images: upgrade_green.png, upgrade_gray.png
+- Renamed your_tower.png
+- Restored deleted lv_0.png from temp folder
+- Added lv_6.png and lv_7.png from temp folder
+- All images now correctly named for upgrade adaptation system
+
+v1.32 - Big Dick Randy vs Mahoraga Interaction
+- Added check: if Big Dick Randy and Mahoraga appear at same time
+- Randy slaps Mahoraga (closes Mahoraga overlay, stops thread)
+- Logs: "mahoraga got his cheecks clapped by randy and died."
+- Mahoraga disappears, Randy continues
+
+v1.33 - Big Dick Randy Scary Log Messages
+- Added repetitive "randy is here." message (10 times) after Randy disappears
+- Added scary log messages:
+  - [ERROR]   BIG_DICK_RANDY.exe has bypassed all detection systems
+  - [CRITICAL] HE HAS LEFT THE SCREEN
+  - [FATAL]   HE IS IN THE FUCKING ROOM
+  - [FATAL ERROR] : ⚠️ RANDY HAS FOUND YOU ⚠️
+  - [DEAD] : look behind you...
+
+v1.34 - Big Dick Randy vs Mahoraga Interaction
+- Added global flag _maho_is_showing to track Mahoraga overlay state
+- When Big Dick Randy appears, checks if Mahoraga is also showing
+- If both appear simultaneously, Randy slaps Mahoraga
+- Mahoraga overlay closes and thread stops
+- Logs: "mahoraga got his cheecks clapped by randy and died."
+- Randy continues with his overlay and audio
+- Version bumped to 1.34
+
+v1.35 - Big Dick Randy Summoned by Mahoraga
+- Added 60% chance that Big Dick Randy spawns when Mahoraga appears
+- When Mahoraga triggers during tower placement adaptation
+- Random check: if < 0.6, Randy is summoned immediately
+- Uses threading.Event for immediate spawn signal
+- Logs: "Mahoraga summoned Big Dick Randy!"
+- Randy and Mahoraga can still interact (Randy slaps Mahoraga if both show)
+- Randy's random timer still runs independently in background
+- Version bumped to 1.35
+
+v1.36 - Bug Fixes and EXE Builder Updates
+- Fixed Big Dick Randy event initialization bug: _bdr_immediate_event now initialized in __init__
+- Fixed BDR thread restart bug: use clear() instead of creating new Event object
+- Fixed Build_EXE.bat IMG_DIR undefined variable: use correct img_dir path
+- Added missing dependencies to Build_EXE.bat: pytesseract, google-generativeai
+- All dependencies now properly installed in both BAT launcher and EXE builder
+- Version bumped to 1.36
+
+v1.37 - Threading Bug Fix
+- Fixed ability_spam_thread naming conflict: renamed function to ability_spam_worker
+- Thread target now correctly references the worker function instead of the thread variable
+- Prevents potential AttributeError and thread startup failures
+- Code review completed: all None checks, resource cleanup, and threading patterns verified
+- mss.mss() context managers properly used in all screen capture operations
+- All finally blocks ensure proper cleanup even on exceptions
+- Version bumped to 1.37
+
+v1.38 - Big Dick Randy Mini-Game
+- Added driving chase mini-game where Randy chases your car
+- Randy starts on left side, slowly moves toward right side
+- Quicktime events (E, O, B, X, L) appear randomly to push Randy back
+- Successful QTE pushes Randy back 15%, failed QTE moves Randy forward 10%
+- 5-minute timer before Randy takes off his coat
+- After coat removal: QTEs disabled, Randy speed increases significantly
+- Game over when Randy reaches the right side (jumps on car)
+- Setting: bdr_minigame (enable/disable mini-game)
+- Test function: bdr_minigame_test (test from settings)
+- 30% chance to trigger mini-game instead of regular BDR appearance
+- Visual overlay shows road, car, Randy, QTE prompts, and progress
+- Version bumped to 1.38
+
+v1.39 - Little Big Dick Randy Popups + Performance Fix
+- Added little Big Dick Randy popups (small 50x100 images)
+- Popups appear randomly every 60-300 seconds near bottom-left of screen
+- Impossible to disable - always runs regardless of setting (prank feature)
+- Popups are purely visual and don't break the macro
+- Each popup stays for 3-8 seconds before disappearing
+- Settings: bdr_little_popups, bdr_popup_min_interval, bdr_popup_max_interval
+- Fixed lag compensation - disabled by default (was causing 2x delay on low ping)
+- Setting: lag_compensation changed from True to False
+- Macro now uses actual timing settings without ping-based adjustments
+- QTE timeout in mini-game reduced from 2.0s to 0.4s (much faster)
+- Version bumped to 1.39
+
+v1.40 - Fake Big Dick Randy Achievement Tabs
+- Added fake achievement/tabs from Big Dick Randy
+- Fake achievement popups open in browser tabs every 15-90 minutes (900-5400 seconds)
+- 15 different fake achievement messages about Randy watching/playing
+- Messages include: "You got 69 coins from Big Dick Randy", "Randy says: nice tower placement", "Achievement: Randy Approves"
+- Visual design: Dark themed achievement popup with Randy branding and glowing effects
+- Maximum 5 fake tabs at once - oldest removed when limit reached
+- Tabs stay open even after macro closes (impossible to close automatically)
+- Non-blocking - Opens in browser tabs without interfering with macro operation
+- Settings: bdr_fake_tabs, bdr_fake_tab_min_interval, bdr_fake_tab_max_interval, bdr_max_fake_tabs
+- Always runs regardless of setting - this is intentional (prank feature)
+- Version bumped to 1.40
+
+v1.41 - Always on Top Window + Settings Navigation Prank
+- Added on_top=True to macro window to prevent AVG/popups from stealing focus while AFK
+- Window stays on top of other windows unless you explicitly click elsewhere
+- AFK protection - random notifications won't break the macro when you're away
+- Updated little popups: 50% chance to show overlay, 50% chance to "look at" random settings tab
+- Settings navigation is purely cosmetic - logs "Randy is looking at [Tab] settings tab" without changing settings
+- Settings tabs: General, Recording, Steps, Gamemodes, Profiles, Advanced
+- Little popups still appear randomly every 60-300 seconds as overlay (50%) or settings log (50%)
+- Version bumped to 1.41
+
+v1.42 - Roblox Unfocusable + Lag Compensation Fix
+- Added WS_EX_NOACTIVATE to Roblox window when docked to prevent focus stealing
+- Roblox won't grab focus from macro when AVG or other popups appear
+- Macro window remains focusable (can still click away)
+- Only applies when Roblox is docked to macro panel
+- Fixed lag compensation default value bug - code was defaulting to True instead of False
+- Now properly defaults to False - lag compensation is off by default
+- Fixed cfg.get("lag_compensation", True) to cfg.get("lag_compensation", False) in 2 places
+- Setting: lag_compensation now properly respects False default value
+- Version bumped to 1.42
+
+=============================
+All features integrated and working.
+=============================

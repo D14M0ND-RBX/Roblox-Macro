@@ -653,6 +653,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 APP_TITLE = "Diamond TD Macro"
 VERSION = "1.42"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
+# GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
 DATA_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "TDRecorder")
 REC_DIR = os.path.join(DATA_DIR, "recordings")

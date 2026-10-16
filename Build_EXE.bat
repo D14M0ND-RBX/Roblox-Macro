@@ -7,6 +7,7 @@ cd /d "%~dp0"
 title Build Diamond TD Macro
 rem Put this file in the SAME folder as Diamond_TD_Macro.bat, then double-click it.
 rem It installs everything it needs (Python, PyInstaller, pywebview, OpenCV, WebView2) by itself.
+rem GitHub auto-push enabled
 if not exist "%~dp0Diamond_TD_Macro.bat" (
     echo [ERROR] Diamond_TD_Macro.bat was not found next to this file.
     pause

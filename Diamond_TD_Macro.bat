@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.42"
+VERSION = "1.44"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -772,6 +772,7 @@ DEFAULTS = {
     "ability_spam": True,  # Automatically spam tower abilities when available
     "ability_spam_interval": 0.5,  # Interval between ability spams (seconds)
     "time_scale_mode": "OFF",  # Time scale mode (OFF, 1.5x, 2x) - speeds up game
+    "time_scale_2x": False,  # Enable 2x speed during recording (clicks arrow then 2x button)
     "hotbar_click_select": False,  # Select hotbar slots by clicking instead of keys
     "tower_ui_cache": True,  # Cache tower menu UI position for faster access
     "big_dick_randy_mode": False,  # Enable Big Dick Randy mode (random appearances)
@@ -1887,6 +1888,9 @@ TEMPLATES["place_hint"] = "iVBORw0KGgoAAAANSUhEUgAAADwAAABqCAAAAADFQG1EAAAJJ0lEQ
 TEMPLATES["veto_text"] = "iVBORw0KGgoAAAANSUhEUgAAAUIAAAASCAAAAAALP4gDAAACtklEQVRYCd3BAYocVwJEwXj3P3S6fnW1PYJtS5hZEIrIL5v8H0x+d5OP8quGfLshv7chn+RXDflg5BeM/GDI/zbyGxjySX7Z5JORnxvyo8kHQ34Dk48aeRn5b0Z+bsjPjTDkO418NPLVyL8aDTmG/DcjP7EM+bkRhizfZuSjka9G/tVoLmEuMYR5yWPEXPIYwsgcYchlyDH/CCPHaGjkZYh55DLkb0OMMJqjkeUyYl5iyMscYQhDLkMYwshlhKERo7mEuWRumbfcRubIy9wyMkfMLXOL+SJGbqN55Jgj8xZzy8vcGmE0R3PE3Jof5TZHzK05Ym7NESPmlnnENEfmyLw0b7mN5paXeWlkjsyjecnIvMTIbTRvucyRIUPmkWP+EUZzNEfmg9zmyPwg5qsYmUfzlmm+yjE0xJDL0JAfDI0MMW+5DA0xNDJyGw0xcowwxGjechlyDDEaYoj5KkYjjyGGmFveRiOX0RDzEiPTfBVza4ghx8gcecytkRHmLXNriKG55WU0wsgxwhCjectlyDHEaIQR5oswGnmMMMTccsytkcto5DJHGJmGhobm0RBDjpFj5JhHIyMMOeaREUPmyMtoiJFjhCFGQ/425BhiNMIIQ44RRiOPEYaYW5hHI5fREHMLI9OQydDQ0LzlNjK3HCNDIyOXuWVkyLxlLnmMRhg55pIRRuaWl3k0j0YYucwtI4zmktvIZR7NJSNGc4mReTTCaDRkMjSP5i230dxym0cjI8fcmkfMI0beRiOM3ObSCCPmlpe5ZR6NMHLMrRFG5pJj5JhbzCXzkrlkxNwywmg05BhiNJqXPEYMeRuNRkZeRi6jkctkxMjbaISRl6ERRi4j/xg5pqERRl6GjDBiyDFym0suQ4xGDBm5jDDCyOSTId9vjvwx8smQ7zeX/DnyyZDvN+QP8heR640XRAwgDAAAAABJRU5ErkJggg=="   # "Map is already in the current rotation!" - letters only (binary mask, no background)
 TEMPLATES["veto_btn"] = "iVBORw0KGgoAAAANSUhEUgAAAFYAAAAiCAYAAADF5S4gAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAqDSURBVGhD7Vh7cFTVHf7tbvaRd0hCSIIEkeDQGiSRQERSJGhAlJQ0VZ6CIDCtdLRYrXYEHWaKOlNF69SxRYKiTMXBdkBaRAyEFORdK48ISUTCU14B8t7NbrLp9x3uDZtld0mIkT+Sb+bO3b33nHPP+c73ex1Dc2Zms3TjB4dRu3fjB0Y3sZ2EbmI7Cd3EdhK6ie0kBCSW6UKTwSAV4RHybepdUh0RIU7j9feCbaojIuVIappcRF+O0dVSD78skQg3CKm12sT48MNy24sLxDx7jthBmD+i9I1gG/Ps2dLvxYViQF+OwbG6ErmmRUlJi7TfraCTGjRrloT8PEdMkZFi7NtXJCxM7IcPi9npvGZXVB+o2jJzpljGjhFjeLiY+/eXZvRxHCwWc1NTl/E9Pomlsi5Dde5JkxSpZhBkCAoSo9kshvheYojqIfaSUjGCXFPzFR3S/OujosTy2GMSNGqUBGEjDCaTmNinb5I40N9x5DsJcTao9oHAERvcbmnE2L4uEzbQcKVpCxwB2geh/Y8Nn5UXlVd1330S8cQTYoyOVqS2ABNtqq+Xhk2bxJW/XEKrKtXjusgoMc+ZLdb77xdTSAhGvrqY5sZGcV+6JOV/XCzJ+77WnvoHyXjj9GmpB1m+8BDmNBRWoKPUbpdVFy5o/1ojDhs7LyFB+9calzCv8y6X9q81kqxWCWlDPPEHn4olJa6KiyKxscr8qdQWoqgWEG1KShIJhVsoLROnLVisUKqV5h8cLAbPCYEkNxbu3FIkwYWbxdpwfcUa8Q07SD2BthzLBosJwkKp/iZYSSUIGYZnOtZfvqyeWUJDxYzvs22j9p3RsKJEi0X99sb+ujpZe/GiFEMo3tcAm02iPAXVTvg9K6BpMwjRtM1ZMG2oxFOFJKwRKnTv2q3+GjKGiTkm5po2Lky8sahInB9+KMFVVWLxo0JvVIGot77/Xm3i/B07JLxXL3HDR7+VmSlVeD4jLk5uw+KpuHfOnBErSP3dnj1ihZJP79snyyZMkGCsYU58vFxCmzp8NxT/qeBIjOnE3HZUV0sR5hQN8cQNHKi+e2LvXqnHuib37Cm3YoPoRnjV4Nv8Fu82jBODMXpScH7gN3jRd5qx6wxU9KnGW/uqRRp04nCnOk3JyWIagMvb/LEQKtW1abM4V6yQMCzAjDHbCk6eCzmHOZhBYL977lHqpRLLt29XPjgFZBZi3DNQ8ZCpU+UnY8eqvgWvvCLfHTokDnxvX22tHIACSzCXg7jvrqmR4xjjc6j8qMOh2g9G5pL7+uuSkpMj327ZIpWnTinVfgniz2EOVPZnaM87x+G7vRj3EO7BiCPcLG8EdCJGTCwMgzs/+ED5VBJFFbaARGKx6vIgVTd/9mFfjsGx2osMzdy/+ugjaQR5xJApU5Sp06+S0ANYLDc7A5kIUXPunGxeu1YRasJ/G1zBwDFjFPG8WzFmOQjdAYIvgDQq3EJRaKA7sSGz4WaexfjcgCNoz+e3jx4td02eLHeMHy+RiYlq4/9RUSHroHBvtOnY8LpuwRMg8EbN3xeWnj2rCJzw2muSNnGierb22Wdl3yefqN/EAGQh07CBxAa0+9PLL0sc/OqvnntORj75pNoIHS5sSNGbb8obUKgT81q9f7/EMI30wtb8fFmE7/RG3+kYY9TTTytydTRjncXr1sn6hQvFAeFkIQu6F5eONoU9EsPo3wCilE8NpD68a969B21XSmhlZYdIJXTV7oE70aGrU8fdKEYIqvrvIISzm4sFjwYxJLXi6FE5+Omn6s7glv3CC5I3b540oR1dii9UwZfyTe4zz8gYjEVS3fD750pKFJG0kkHw49MwLyNc5H8goMt4r6NNxN5MDIKZMuic+eYbOY7gRCSkpEifIUPU71gUIP1HjlS/v16zRk7BFfTr00dGgziitKBA3snOln8+9ZS6l2zcqJ5Pe/55scLcp6alSf6CBeoZsQK5++9vuUWW4H0sAl8ulEpUIv37S1aW/BV+fMnQoS3jcB4kmJtAn6ujTcTSFdTBV1lnTFfR368bIPDOeHcG2s5QuS37dgQsBtIDqDYDlaGOAqiVyEIOThURtfCBw+DCqGrea7V8NwRj3p6aqn6zuPAEMwgiHUQyxSO2vf22XD5xQsIQrFzwuRsWXY35A9COqIDP1RFw1TQpz9rfMm7ctSmVN/COPtgy7gFVMAQ6W2grWAyQ4MNQCVMt4qcPPqjUOjgvT/0/tmuXlBcXiwXt4nr0UM8IBrsHXnqp5Up/9FHtDQhBSkXEekV1l+bqYhhLNFRr36UvJarh+3Uw2BGeBU1AYltqfyb/qKiYXrUilRPgYLw8/S7asC37sC/H4Fg3CqrkDrgE+rg9WpCiIhmw9ICy6733xIpv9EbQotnqYKD684gRPq+SbdtUG6Z2nuA4xPFjx9Sd6K2p+19aBtB78GB1J5ieEcyPdfglliZcy9ofJhc06l6Vp3pXVIz+zg2fq4vFgie5bMs+zCIsM2dJbQfdgh7E/vfxx8oUiR7wpQQXVobUrgcWxih+FIQxyScyHn9cEu+8U+qRNjmRmiUjgxg+d65UgXy3Vp25EIx0MF+OhijiMfZ/CwulGq6EyITPTn3kEQmFxSalp0vukiXqOXEAvp1I8FC+33SL56nK/Mdki4mq8FCcnvyTUGYKBH0qzd9XSduEBTm/KBDX8nyJ8FhEe5EP8zuFyJ/z6qsqL9WxcfFi2blsmaRinjxnYAJPAqfA5+o+0htMkwrhs79CvpuNIucPO3e2ansShdH04cNlOKxu8apVfsfZvnSpKkh4rvBb5LZWbe0+Ky+arf1nmRLyyzx19MdTqhZg4nry73r/fVRUSKmgIEdJqTRD4TxDuOZsAR8zwp+dPlgs0R6+qb2gn2XlU3nypAzFRhJU4Zr581WqxcOZQSCXxJ4pL5cyZAQRWGwU1GfUFkwl053sWr5cgiAQuhkb5n8WWUcSoj3PJRTgdgpXr5ZS+O3zW7dKAnLdKGQLumjOl5XJF9jQHe++q85WJmF9nhWYT8XywaXwCHVIHZ73C3VsKCRXM39fyb/fIgL5oAtVTvWatdKMpD625sYVy0robwE25tdIj+LhY/WKiHciCM/C4uKkCf9rz5/HMq4seTjWNRiBcQVSNGYGzE3DQBCFVIPv1GHurPCS0D8GpDEHpitogMrtyNEJKjQHa03xqN4Iv6dbVpdTGg+XqENqnqcyWASq/a85W0Af7m4jJuH8bIPIypUSaa/vUOJMdbF/ueYbPTExNlb6IS8lQtEuDfPmnZG6Bhtihwuiupk1JIOgCSBoCNrogbEeJDLBt6MNiWM7+vXfJCRIIvx2Ld7X4LssDhqh8HD0Y/9c+lyPyk6HXx/LhyorsNqkCSlL5PiHxPnldnFq5s/a/6rXvYKWPghUFuSXlswRUvXv9WKCjwprcPjs82OA8yIx3JQQEOJvDmzH0ys6Pm6KN2ibHIenZmasMxACnhXoRFWGhYspI0OMqHxstTXXLVPpFhzo04Riwo3yNgrmf7NIvVlo0yEMGzSD4PaeUHFTDF2MUB1tcnkk5kaO/bqaSj3RkVjSjQDoJraT0E1sJ6Gb2E6ByP8Bs7LuHPW5i9kAAAAASUVORK5CYII="
 TEMPLATES["veto_btn2"] = "iVBORw0KGgoAAAANSUhEUgAAAGYAAAAtCAAAAAB5K0ERAAAFeUlEQVRYCb3BfUzU9x3A8ffn7n73wIMIIogi2LrMYNtkXSiIhDWzXNtks+p1GW42m7HZapMt9iH57h+jbba1e0jUpWnWJa7N1rSbW2tttnS2d5oYqwihD8lqsa1PnKfAAcqAg7v73e++48cO+FHI/iL3eokiH0SRD6LIB1HkgyjyQRT5IIp8EEU+iCIfROEkaBwEzaIQhUPtlu6TFjPcm+re7mExiGJWzbaq9JkTGXI89zV7e9+KsghEMaMmtEIwz4ZNphjBjQa672gUp2RKY5MCAzDHNTYp9PD/iGJa7dYqAW22h00mGcEmQ0D3HuvBYfhSBptUV7qx+mMam+9OD5NGe5iyqpS5RJFTsrNKsCXPRUwwWjf4sekbL2hmWZ8kNLay1UWMxm5ic1WsxXbrAlNur2QuUeS4N7X4sOlkZ9g0gg1+wZY6HdE4XLuRwWbUVur+ngw277olTErEbzClfIWnECdRTHO3tngE20RnV31DAJvOnI5YOCXPZ/9wu/tfr11dsUrH4tWPfHvi1HMl68w0Xu9noya74EjC4ymog0zKcvs82EQxw3N/kxebNk3DEGzp9vcyzKEvDn6/rXT41+8HVutrqfp9S4f2flJgJQHvsNvH+xCKQ9H6wfh4FlwFFeUGiGKWEWz0CQ461RE2+ZLhiyUH1vCXN+PlDC4P7Uh/9HhyqQtbn1VUfBZCcXAVJDRTpLCmFFE4GK2NARwmOiImX2ZdGPnpA0su/77dS7r+ydr4wb8H7trRWDrefexv6af3YHv5xfFlZW3N1Vw/c2QI/5plonAygg1+IUcnO8Mm8/XGvvKztRw+OkLJ5t3W+e2ptmcNbG88/cST2A4/7/rWL4qwje3rxF8nijmMYJOXnHR72GQByS9G97YUfPDnD/jao3cPvPLSnUc9XDy/qh72xr75Qzg+Hnln7T8DDHdkN5SS3BV1LxPFXBW7C8lJvBRnQVf7N/7ottThN1wP/cTV/Wj8xQc5+UyW7zzBlXuJQqivzzq0jc/3jFJ44A7e/Tl+UcxhBJu85KTbwyYLGbls7Wt2n3rV9cg3bv3jGeNcKYPj4FkJd4xGIRQbyH64jKc6RXT9QW5txisKJyPY4BdydLIzbLKA7MWhzdtX3/yT9Vjxp79qL/hYmPb1wSiEokPZq8LD/WVLRow3se7FEIWD0doYwGGiI2KygIFosWqiO3NXIvL8SPHxUh7/N7ZknCiEYgPWh+U81Smi7znA0Ba8ophlBBt9goNOdYRN5ktfGt4RWg589seOkcL9QbpUmsB3X0v0c8lg14W+zMGH+XzPKIWH6njnOfyimOG5v8mLTZumYQi2dPt7GeaL9a7Z3QCZyG+NbLLmFYOBrmxjeXj/dX18PbGPe39Z826A4XN6QykTO6+7y0Uxzd3a4hFsE51d9Q0BbDpzOmIxz9iV0ce2FnH59eNlq75Ibnw2gK3vx93ptt8Aow3jrYeKsY3t7SJQJ4oc96YWHzad7AybRrDBL9hSpyOaeS4M3fODuznxu1vlXx3oSVV+r2El1079dSyRWLple23qo/1XjHVtzdXEzhy5if+2MlHklOysEmzJcxETjNYNfmz6xguaeS7HLSaJv6qKwWvj/I+ryJXIaMCVEZdmihTWlCKKabVbqwS02R42mWQEmwwB3Xush/msKzc14K1cCaQHBiay4CqsWO7u7Tc1sqTaOxgfz4KroKLcAFHMqAmtEMyzYZMpRnCjge47GmUhyZQG3H6DKWbacvkMbBNpj8/DpEzKcvs82EQxq2ZbVfrMiQw5nvuavb1vRVkEonCo3frpSYsZ7k3rj/WwGEThVDJm4eAu+g+LQhT5IIp8EEU+iCIfRJEPosgHUeSDKPJBFPnwX8fkJKg4/tTCAAAAAElFTkSuQmCC"
+# 2x speed templates (arrow button and 2x button)
+TEMPLATES["speed_arrow"] = ""  # Placeholder - user will need to provide image
+TEMPLATES["speed_2x"] = ""     # Placeholder - user will need to provide image
 USER_TPLS = set()          # images the player snipped themselves: captured at the size they have on screen, not at 1440p
 TPL_GEN = [0]              # bumped whenever templates are (re)loaded so cached resized copies are never stale
 DEEP_SCALES = tuple(round(0.50 + 0.03 * i, 2) for i in range(37))   # 0.50 .. 1.58: wide fallback sweep tried for EVERY image
@@ -1904,6 +1908,9 @@ TPL_THR = {                                # per-template minimum threshold (ove
     "place_hint": 0.60,
     "veto_btn": 0.65,
     "veto_btn2": 0.65,
+    # 2x speed templates
+    "speed_arrow": 0.70,
+    "speed_2x": 0.70,
     # new recovery templates (loaded from Diamond/images/*.png alongside embedded ones)
     "leave_btn": 0.78,
     "play_triangle": 0.55,
@@ -7765,6 +7772,26 @@ class StepEngine:
                 if rec:
                     e.status("Playing recording '%s'" % rec_name)
                     e.set_phase("play", budget=0)
+                    # 2x speed mode: click arrow then 2x button
+                    if bool(e.cfg.get("time_scale_2x", False)):
+                        e.log("2x speed enabled - searching for arrow button...", "info")
+                        # Search for arrow button every 0.05 seconds
+                        arrow_found = e.wait_image("speed_arrow", timeout=30)
+                        if arrow_found:
+                            e.log("Arrow button found - clicking", "ok")
+                            e.click_match("speed_arrow")
+                            e.sleep(0.2)
+                            # Search for 2x button
+                            e.log("Searching for 2x button...", "info")
+                            twx_found = e.wait_image("speed_2x", timeout=10)
+                            if twx_found:
+                                e.log("2x button found - clicking", "ok")
+                                e.click_match("speed_2x")
+                                e.sleep(0.2)
+                            else:
+                                e.log("2x button not found - continuing", "warn")
+                        else:
+                            e.log("Arrow button not found - continuing without 2x", "warn")
                     e.play(rec)
                 else:
                     e.log("Step: recording '%s' not found" % rec_name, "warn")
@@ -9504,6 +9531,11 @@ footer b{color:var(--txt)}
    <label class="f"><span>Screenshot on error<small>save screen when errors occur</small></span><span class="sw"><input type="checkbox" data-k="screenshot_on_error"><i></i></span></label>
    <label class="f"><span>Only while Roblox is focused</span><span class="sw"><input type="checkbox" data-k="focus_only"><i></i></span></label>
    <label class="f"><span>Reward read delay (s)<small>wait before clicking Play Again</small></span><input type="number" step="0.1" min="0" data-k="reward_delay" style="width:90px"></label>
+  </div>
+  <div class="card"><h4>Performance</h4>
+   <label class="f"><span>Lag compensation<small>automatically adjust timings based on ping (can cause delays)</small></span><span class="sw"><input type="checkbox" data-k="lag_compensation"><i></i></span></label>
+   <label class="f"><span>Current lag multiplier<small>auto-adjusted if lag compensation is on</small></span><input type="number" step="0.1" min="1.0" max="4.0" data-k="lag_multiplier" style="width:90px" readonly></label>
+   <label class="f"><span>2x speed mode<small>clicks arrow then 2x button during recording (2x speed only)</small></span><span class="sw"><input type="checkbox" data-k="time_scale_2x"><i></i></span></label>
   </div>
   <div class="card"><h4>Hotkeys &amp; window</h4>
    <label class="f">Start<select data-k="hk_start" class="fk"></select></label>

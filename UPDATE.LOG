@@ -310,4 +310,24 @@ v1.42 - Roblox Unfocusable + Lag Compensation Fix
 
 =============================
 All features integrated and working.
+GitHub auto-push script added.
+
+v1.43 - Lag Compensation Setting Added to UI
+- Added lag_compensation checkbox to Settings panel (Performance section)
+- Added lag_multiplier display (read-only) to show current multiplier
+- Setting was in code but not accessible in UI - now fixed
+- Defaults to False (off) to avoid unintended delays
+- Users can now easily toggle lag compensation from settings
+- Version bumped to 1.43
+
+v1.44 - 2x Speed Mode
+- Added 2x speed mode setting (time_scale_2x) in Performance section
+- Searches for arrow button every 0.05 seconds when enabled
+- Clicks arrow button, then searches for and clicks 2x button
+- Only activates during recording phase (not intro or other phases)
+- Requires user to add speed_arrow.png and speed_2x.png to images folder
+- Smart fallback: if buttons not found, continues without 2x (logs warning)
+- Added placeholder templates for speed_arrow and speed_2x
+- Added template thresholds for both buttons (0.70)
+- Version bumped to 1.44
 =============================

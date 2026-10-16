@@ -1,7 +1,27 @@
-# Diamond TD Macro  `v1.42 · Beta`
+# Diamond TD Macro  `v1.44 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
+
+## What's New in v1.44
+
+### ⚡ 2x Speed Mode
+- **New setting: 2x speed mode** - Clicks arrow button then 2x button during recording
+- **Automatic detection** - Searches for arrow button every 0.05 seconds
+- **Only during recording** - Does not affect intro or other phases
+- **Setting location** - Performance section in Settings panel
+- **Requires template images** - Users need to add `speed_arrow.png` and `speed_2x.png` to images folder
+- **Smart fallback** - If buttons not found, continues without 2x (logs warning)
+- **Setting:** `time_scale_2x` - Toggle to enable/disable
+
+## What's New in v1.43
+
+### ⚙️ Lag Compensation Setting Added to UI
+- **Added to Settings panel** - Lag compensation now visible in Performance section
+- **Checkbox to enable/disable** - Easy toggle in settings
+- **Multiplier display** - Shows current lag multiplier (read-only)
+- **Fixed accessibility** - Setting was in code but not in UI before
+- **Defaults to False** - Off by default to avoid unintended delays
 
 ## What's New in v1.42
 

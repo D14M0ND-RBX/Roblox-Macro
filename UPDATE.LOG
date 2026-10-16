@@ -330,4 +330,38 @@ v1.44 - 2x Speed Mode
 - Added placeholder templates for speed_arrow and speed_2x
 - Added template thresholds for both buttons (0.70)
 - Version bumped to 1.44
+
+v1.45 - Randy System Overhaul
+- Added Randy rarity system (common/rare/ultra-rare tiers)
+- Common: 70% chance, normal size and duration
+- Rare: 25% chance, 1.5x size, 1.5x duration, gold glow
+- Ultra-Rare: 5% chance, 2x size, 2x duration, red glow
+- Added evidence board - captures screenshots of Randy sightings (max 20)
+- Added lore unlocks - 10 progressive case file entries based on sightings
+- Added incident reports - fake dashboard messages from Randy
+- Added Mahoraga counter - tracks adaptations before Randy interrupts
+- Added Gemini changelog integration - uses Gemini 2.5 Flash to approve/reject features
+- Added fake changelog - shows fake Randy approvals alongside real AI decisions
+- Added idle detector - fake creepy messages when macro is idle
+- Added new UI section "Big Dick Randy 💀" in Settings with all toggles
+- All Randy features are now independently configurable
+- Randy lore entries progress from 0-100 based on sightings
+- Evidence screenshots saved to %APPDATA%\TDRecorder\randy_evidence\
+- Version bumped to 1.45
+
+v1.46 - Auto Backup System, Randy Stat Reactions Enhanced
+- Fixed auto backup system - added proper background thread
+- Backup thread runs independently, checks every hour
+- Thread starts when macro starts, stops cleanly on shutdown
+- Added start_backup_thread() and stop_backup_thread() methods
+- Backups run based on backup_interval setting (default 24 hours)
+- Old backups auto-cleaned based on backup_max_age setting (default 7 days)
+- Enhanced Randy stat reactions - now triggers after each game completes
+- Added bdr_stat_reactions setting (default True)
+- Randy reactions integrated into reward processing phase
+- Comments on coins, XP, runs with surveillance theme
+- Special reactions for 69 coins, 420 XP, 50 runs, 100 runs
+- 30% chance to comment when conditions are met
+- Added UI toggle for stat reactions in Randy settings section
+- Version bumped to 1.46
 =============================

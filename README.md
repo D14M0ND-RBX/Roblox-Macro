@@ -1,7 +1,45 @@
-# Diamond TD Macro  `v1.44 · Beta`
+# Diamond TD Macro  `v1.46 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
+
+## What's New in v1.46
+
+### 💾 Auto Backup System
+- **Daily automatic backups** - Backs up config and profiles every 24 hours
+- **Background thread** - Runs independently without blocking macro operation
+- **Configurable interval** - Set backup frequency (1-168 hours)
+- **Auto-cleanup** - Keeps backups for 7 days by default (configurable)
+- **Zip format** - Compresses backups to save space
+- **Includes all data** - Config, profiles, and custom images
+- **Backup location** - Saved to `%APPDATA%\TDRecorder\backups\`
+- **Proper shutdown** - Thread stops cleanly when macro closes
+
+### 💀 Randy Stat Reactions - Enhanced
+- **After-run comments** - Randy reacts to your stats after each game completes
+- **Special milestones** - 69 coins, 420 XP, 50 runs, 100 runs
+- **Wealth observations** - Comments on coin hoarding and XP accumulation
+- **Surveillance theme** - Randy monitors your progress
+- **30% comment chance** - Randy speaks when conditions are met
+- **UI toggle** - New "Stat reactions" checkbox in Randy settings
+- **Separate from fake tabs** - Works independently from other Randy features
+
+## What's New in v1.45
+
+### 💀 Randy System Overhaul
+- **Rarity system** - Common (70%), Rare (25%), Ultra-Rare (5%) tiers with different effects
+- **Common** - Normal popup size, normal duration
+- **Rare** - 1.5x size, 1.5x duration, gold glow effect
+- **Ultra-Rare** - 2x size, 2x duration, red glow effect, unique sound
+- **Evidence board** - Captures screenshots of Randy sightings (max 20 stored)
+- **Lore unlocks** - Progressive case file entries based on sightings (10 entries total)
+- **Incident reports** - Fake dashboard messages like "SUBJECT HAS ENTERED THE SETTINGS MENU"
+- **Mahoraga counter** - Tracks adaptations before Randy interrupts the streak
+- **Gemini changelog** - Uses Gemini 2.5 Flash to approve/reject features (real AI decisions!)
+- **Fake changelog** - Also shows fake Randy approvals alongside real ones
+- **Idle detector** - Fake creepy messages when macro is idle
+- **New UI section** - "Big Dick Randy 💀" card in Settings with all new toggles
+- **All settings configurable** - Toggle each feature on/off independently
 
 ## What's New in v1.44
 

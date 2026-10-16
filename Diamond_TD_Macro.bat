@@ -132,7 +132,7 @@ exit /b 0
 """
 #   TD RECORDER  -  record a Roblox tower-defense run once, replay it forever
 #   (this file is both a .bat launcher and the program - see top of file)
-import os, sys, re, json, time, base64, threading, ctypes, subprocess, struct, zlib, traceback, datetime, math
+import os, sys, re, json, time, base64, threading, ctypes, subprocess, struct, zlib, traceback, datetime, math, zipfile
 import atexit, functools, logging, platform
 from logging.handlers import RotatingFileHandler
 from ctypes import wintypes
@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.44"
+VERSION = "1.46"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -740,6 +740,26 @@ DEFAULTS = {
     "screencast_on_high_score": False,  # Record when high coins/XP is earned - NOT IMPLEMENTED
     "screencast_threshold_coins": 1000,  # Coins threshold for high score recording - NOT IMPLEMENTED
     "screencast_duration": 5,  # Duration of screencast clips in seconds - NOT IMPLEMENTED
+    # Milestone screenshots
+    "milestone_screenshots": True,  # Auto-screenshot on high coins/XP milestones
+    "milestone_coins": 1000,  # Coins increment for milestone screenshot
+    "milestone_xp": 500,  # XP increment for milestone screenshot
+    "milestone_screenshots_dir": "",  # Directory to save milestone screenshots
+    # Tower-specific timing
+    "tower_specific_timing": False,  # Enable different delays per tower type
+    "tower_timing": {},  # Tower-specific timing overrides (tower_name: delay_multiplier)
+    # Recording analytics
+    "recording_analytics": True,  # Track failure rates per recording section
+    "analytics_data": {},  # Store analytics data
+    # Better error recovery
+    "error_recovery_attempts": 3,  # Number of fallback attempts before giving up
+    # Template comparison
+    "template_comparison": True,  # Enable template diff feature
+    # Built-in backup system
+    "auto_backup": True,  # Enable daily automatic backups
+    "backup_interval": 24,  # Backup interval in hours (default 24 hours)
+    "backup_max_age": 7,  # Keep backups for 7 days
+    "last_backup": 0,  # Timestamp of last backup
     "account_health_monitor": False,  # Enable account health monitor (anti-ban detection) - NOT IMPLEMENTED
     "health_cooldown_minutes": 30,  # Auto-cooldown after this many minutes of continuous play - NOT IMPLEMENTED
     "health_warning_threshold": 80,  # Warn when human-like score drops below this percentage - NOT IMPLEMENTED
@@ -787,6 +807,30 @@ DEFAULTS = {
     "bdr_fake_tab_min_interval": 900,  # Minimum seconds between fake tabs (15 min)
     "bdr_fake_tab_max_interval": 5400,  # Maximum seconds between fake tabs (90 min)
     "bdr_max_fake_tabs": 5,  # Maximum number of fake tabs at once
+    # Randy rarity system
+    "bdr_rarity_system": True,  # Enable rarity tiers (common/rare/ultra-rare)
+    "bdr_common_chance": 0.70,  # 70% chance for common
+    "bdr_rare_chance": 0.25,  # 25% chance for rare
+    "bdr_ultra_rare_chance": 0.05,  # 5% chance for ultra-rare
+    # Randy evidence board
+    "bdr_evidence_board": True,  # Capture and display Randy sightings
+    "bdr_max_evidence": 20,  # Max screenshots to store
+    # Randy lore unlocks
+    "bdr_lore_unlocks": True,  # Unlock lore entries based on sightings
+    "bdr_lore_progress": 0,  # Current lore progress (0-100)
+    # Randy incident reports
+    "bdr_incident_reports": True,  # Show fake incident reports in dashboard
+    # Mahoraga counter
+    "bdr_mahoraga_counter": True,  # Track Mahoraga adaptations before Randy interrupts
+    "bdr_mahoraga_count": 0,  # Current Mahoraga streak
+    # Randy's changelog (Gemini integration)
+    "bdr_changelog_gemini": True,  # Use Gemini to approve/reject features
+    "bdr_changelog_fake": True,  # Also show fake Randy approvals
+    # Suspicious idle detector
+    "bdr_idle_detector": True,  # Show fake messages when macro is idle
+    "bdr_idle_threshold": 60,  # Seconds idle before showing message
+    # Randy stat reactions
+    "bdr_stat_reactions": True,  # Randy comments on your stats (coins, XP, win rate)
     "search_x": 0.0, "search_y": 0.0, "search_px_color": None,
     "map_x": 0.0, "map_y": 0.0, "map_px_color": None,
     "ready_x": 0.0, "ready_y": 0.0, "ready_px_color": None,
@@ -800,6 +844,11 @@ DEFAULTS = {
     "ready_px_x": 0.0, "ready_px_y": 0.0, "ready_px_color": None, "ready_px_custom_color": None,
     "play_again_px_x": 0.0, "play_again_px_y": 0.0, "play_again_px_color": None, "play_again_px_custom_color": None,
     "hk_start": "F4", "hk_stop": "F5", "hk_record": "F6", "hk_pick_color": "F7", "hk_switch_profile": "F8", "hk_reload_templates": "F9",
+    # Hidden Diamond Legacy system (secret feature - no settings)
+    "diamond_legacy_unlocked": False,  # Unlocks special features at milestones
+    "diamond_legacy_coins": 0,  # Tracks coins since legacy unlock
+    "diamond_legacy_xp": 0,  # Tracks XP since legacy unlock
+    "diamond_legacy_runs": 0,  # Tracks runs since legacy unlock
     "auto_dock": True,
     "dock_fit": "auto",
     "auto_rejoin": False,
@@ -2421,6 +2470,9 @@ class Engine:
         self._bdr_popup_thread = None  # Little popups thread
         self._bdr_fake_tab_thread = None  # Fake tab thread
         self._bdr_fake_tabs = []  # Track fake tabs
+        # ---- Backup system ----
+        self._backup_thread = None
+        self._backup_stop = threading.Event()
         # ---- watchdog / stall detector + disconnect watcher (borrowed from Calamity + TDS Macro) ----
         self.phase_lock = threading.Lock()
         self._phase = ""
@@ -3972,8 +4024,28 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
         self._bdr_fake_tab_thread.start()
         self.log("💀 Fake Big Dick Randy tabs activated - IMPOSSIBLE TO DISABLE 💀", "warn")
 
+    def start_backup_thread(self):
+        """Start the automatic backup thread."""
+        if not bool(self.cfg.get("auto_backup", True)):
+            return
+        
+        self._backup_stop.clear()
+        self._backup_thread = threading.Thread(target=self._backup_thread_func, daemon=True, name="backup-thread")
+        self._backup_thread.start()
+        self.log("💾 Automatic backup thread started", "info")
+    
+    def _backup_thread_func(self):
+        """Background thread that periodically checks and performs backups."""
+        while not self._backup_stop.is_set():
+            try:
+                self._check_backup_needed()
+            except Exception as e:
+                self.log(f"Backup thread error: {e}", "warn")
+            # Check every hour
+            self._backup_stop.wait(3600)
+
     def little_bdr_popups_thread(self):
-        """Little Big Dick Randy popups - appears randomly in settings or near bottom-left."""
+        """Little Big Dick Randy popups - appears randomly in settings or near bottom-left with rarity system."""
         try:
             import random
             from PIL import Image
@@ -4001,20 +4073,42 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
             min_interval = int(self.cfg.get("bdr_popup_min_interval", 60))
             max_interval = int(self.cfg.get("bdr_popup_max_interval", 300))
 
+            # Rarity system
+            common_chance = float(self.cfg.get("bdr_common_chance", 0.70))
+            rare_chance = float(self.cfg.get("bdr_rare_chance", 0.25))
+            ultra_rare_chance = float(self.cfg.get("bdr_ultra_rare_chance", 0.05))
+
             while True:
                 # Random wait between appearances
                 wait_time = random.uniform(min_interval, max_interval)
                 time.sleep(wait_time)
+
+                # Determine rarity
+                roll = random.random()
+                if roll < ultra_rare_chance:
+                    rarity = "ULTRA-RARE"
+                    size_mult = 2.0  # Ultra-rare = bigger popup
+                    stay_mult = 2.0  # Stay longer
+                    color = "#FF0000"  # Red glow
+                elif roll < ultra_rare_chance + rare_chance:
+                    rarity = "RARE"
+                    size_mult = 1.5
+                    stay_mult = 1.5
+                    color = "#FFD700"  # Gold glow
+                else:
+                    rarity = "COMMON"
+                    size_mult = 1.0
+                    stay_mult = 1.0
+                    color = "#FFFFFF"  # White glow
 
                 # 50% chance to appear in settings vs overlay
                 in_settings = random.random() < 0.5
 
                 if in_settings:
                     # Try to navigate settings tabs (visual only, doesn't change settings)
-                    # We'll just log it since we can't easily interact with the webview from Python
                     settings_tabs = ["General", "Recording", "Steps", "Gamemodes", "Profiles", "Advanced"]
                     random_tab = random.choice(settings_tabs)
-                    self.log(f"💀 Randy is looking at the {random_tab} settings tab...", "info")
+                    self.log(f"💀 [{rarity}] Randy is looking at the {random_tab} settings tab...", "info")
                 else:
                     # Create small popup window
                     wdg = QWidget(None, Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
@@ -4023,8 +4117,9 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
                     wdg.setAttribute(Qt.WA_DeleteOnClose, True)
                     wdg.setFocusPolicy(Qt.NoFocus)
 
-                    # Small size - 60x120
-                    wdg.setFixedSize(60, 120)
+                    # Size based on rarity
+                    base_width, base_height = 60, 120
+                    wdg.setFixedSize(int(base_width * size_mult), int(base_height * size_mult))
 
                     # Random position near bottom-left of screen
                     g = QGuiApplication.primaryScreen().availableGeometry()
@@ -4034,20 +4129,399 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
 
                     wdg.show()
 
-                    # Draw Randy
+                    # Draw Randy with glow based on rarity
                     qp = QPainter(wdg)
                     qp.setRenderHint(QPainter.Antialiasing)
-                    qp.drawPixmap(5, 10, bdr_pixmap)
+                    
+                    # Add glow effect for rare/ultra-rare
+                    if rarity != "COMMON":
+                        qp.setPen(QColor(color))
+                        qp.setBrush(QColor(color))
+                        qp.drawEllipse(0, 0, wdg.width(), wdg.height())
+                    
+                    qp.drawPixmap(5, 10, bdr_pixmap.scaled(int(50 * size_mult), int(100 * size_mult), Qt.KeepAspectRatio, Qt.SmoothTransformation))
                     wdg.update()
 
-                    # Stay for 3-8 seconds
-                    stay_time = random.uniform(3, 8)
+                    # Log rarity
+                    self.log(f"💀 [{rarity}] Randy appeared at ({randy_x}, {randy_y})", "info")
+
+                    # Stay for 3-8 seconds (longer for rare)
+                    stay_time = random.uniform(3, 8) * stay_mult
                     time.sleep(stay_time)
 
                     wdg.close()
 
+                    # Capture evidence if enabled
+                    if bool(self.cfg.get("bdr_evidence_board", True)):
+                        self._capture_randy_evidence(rarity)
+
+                    # Update lore progress
+                    if bool(self.cfg.get("bdr_lore_unlocks", True)):
+                        self._update_randy_lore(rarity)
+
         except Exception as e:
             pass  # Don't log errors for this prank feature
+
+    def _capture_randy_evidence(self, rarity):
+        """Capture screenshot when Randy appears for evidence board."""
+        try:
+            import mss
+            import datetime
+            max_evidence = int(self.cfg.get("bdr_max_evidence", 20))
+            
+            # Create evidence directory
+            evidence_dir = os.path.join(DATA_DIR, "randy_evidence")
+            os.makedirs(evidence_dir, exist_ok=True)
+            
+            # Capture screenshot
+            with mss.mss() as sct:
+                screenshot = sct.shot(output=None)
+            
+            # Save with timestamp and rarity
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"randy_{rarity}_{timestamp}.png"
+            filepath = os.path.join(evidence_dir, filename)
+            
+            mss.tools.to_png(screenshot.rgb, screenshot.size, output=filepath)
+            
+            # Clean old evidence if too many
+            evidence_files = sorted([f for f in os.listdir(evidence_dir) if f.startswith("randy_")])
+            while len(evidence_files) > max_evidence:
+                os.remove(os.path.join(evidence_dir, evidence_files[0]))
+                evidence_files.pop(0)
+            
+            self.log(f"💀 Evidence captured: {filename}", "info")
+            
+        except Exception as e:
+            pass  # Don't log errors
+
+    def _update_randy_lore(self, rarity):
+        """Update lore progress based on Randy rarity sightings."""
+        try:
+            lore_progress = int(self.cfg.get("bdr_lore_progress", 0))
+            
+            # Add progress based on rarity
+            if rarity == "ULTRA-RARE":
+                lore_progress += 20
+            elif rarity == "RARE":
+                lore_progress += 10
+            else:
+                lore_progress += 5
+            
+            lore_progress = min(lore_progress, 100)
+            self.cfg["bdr_lore_progress"] = lore_progress
+            self.save_cfg()
+            
+            # Log lore unlock
+            lore_unlocks = self._get_randy_lore(lore_progress)
+            if lore_unlocks:
+                self.log(f"💀 LORE UNLOCKED: {lore_unlocks}", "warn")
+            
+        except Exception as e:
+            pass
+
+    def _get_randy_lore(self, progress):
+        """Get lore entry based on progress."""
+        lore_entries = {
+            5: "CASE FILE #001: First confirmed sighting of the entity.",
+            10: "CASE FILE #002: Subject displays unusual intelligence - observed examining settings.",
+            20: "CASE FILE #003: Multiple simultaneous instances detected. Reality distortion suspected.",
+            30: "CASE FILE #004: Subject interferes with automated processes without direct interaction.",
+            40: "CASE FILE #005: Rare sightings coincide with system performance anomalies.",
+            50: "CASE FILE #006: ULTRA-RARE event recorded. Reality breach confirmed.",
+            60: "CASE FILE #007: Subject appears to monitor user behavior patterns.",
+            70: "CASE FILE #008: Time dilation detected during rare manifestations.",
+            80: "CASE FILE #009: Subject displays knowledge of future events.",
+            90: "CASE FILE #010: CRITICAL - Subject attempting communication.",
+            100: "CASE FILE #FINAL: The line between observer and observed has been erased. Randy is watching. Randy has always been watching."
+        }
+        
+        for threshold, entry in sorted(lore_entries.items()):
+            if progress >= threshold and progress - 20 < threshold:
+                return entry
+        return None
+
+    def _generate_randy_incident_report(self):
+        """Generate fake incident report for dashboard."""
+        try:
+            import random
+            incident_types = [
+                "SUBJECT HAS ENTERED THE SETTINGS MENU",
+                "SUBJECT OBSERVED MODIFICATION OF CONFIGURATION PARAMETERS",
+                "SUBJECT ATTEMPTED TO DISABLE OBSERVATION PROTOCOLS",
+                "SUBJECT ENGAGED WITH GAME MECHANICS",
+                "SUBJECT APPEARS TO BE AWARE OF SURVEILLANCE",
+                "SUBJECT DISPLAYS UNUSUAL BEHAVIOR PATTERNS",
+                "SUBJECT INTERACTED WITH UNAUTHORIZED SYSTEMS",
+                "SUBJECT ATTEMPTED COMMUNICATION WITH THE ENTITY",
+                "TIME ANOMALY DETECTED IN SUBJECT'S VICINITY",
+                "REALITY DISTORTION CONFIRMED - PROTOCOL OMEGA INITIATED"
+            ]
+            
+            incident = random.choice(incident_types)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            self.log(f"💀 INCIDENT REPORT [{timestamp}]: {incident}", "warn")
+            
+        except Exception as e:
+            pass
+
+    def _track_mahoraga_adaptation(self):
+        """Track Mahoraga adaptations and let Randy interrupt."""
+        try:
+            mahoraga_count = int(self.cfg.get("bdr_mahoraga_count", 0))
+            mahoraga_count += 1
+            self.cfg["bdr_mahoraga_count"] = mahoraga_count
+            self.save_cfg()
+            
+            # Randy interrupts at random intervals
+            if mahoraga_count > 5 and random.random() < 0.1:
+                self.log(f"💀 Randy has noticed Mahoraga's {mahoraga_count} adaptations. The streak ends here.", "warn")
+                self.cfg["bdr_mahoraga_count"] = 0
+                self.save_cfg()
+            
+        except Exception as e:
+            pass
+
+    def _check_idle_detector(self):
+        """Check if macro has been idle and show fake Randy message."""
+        try:
+            idle_threshold = int(self.cfg.get("bdr_idle_threshold", 60))
+            
+            # This would need idle time tracking - for now, just show random messages
+            if random.random() < 0.05:  # 5% chance when called
+                idle_messages = [
+                    "💀 Randy has been watching the idle time.",
+                    "💀 Subject appears to be waiting. Randy waits too.",
+                    "💀 The absence of activity has been noted.",
+                    "💀 Randy wonders why you're not playing.",
+                    "💀 INACTIVITY LOGGED BY SURVEILLANCE SYSTEMS",
+                    "💀 Randy appreciates the quiet. For now.",
+                    "💀 The void stares back. Randy is the void."
+                ]
+                message = random.choice(idle_messages)
+                self.log(message, "warn")
+            
+        except Exception as e:
+            pass
+
+    def _get_randy_changelog_decision(self, feature_description):
+        """Get Randy's (Gemini's) decision on a feature approval."""
+        try:
+            if not bool(self.cfg.get("bdr_changelog_gemini", True)):
+                return None
+            
+            api_key = self.cfg.get("gemini_api_key", "")
+            if not api_key:
+                return "No API key - Randy approves by default"
+            
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            
+            prompt = f"""You are Big Dick Randy, a mysterious and powerful entity that approves or rejects features for a Roblox macro.
+            
+Feature description: {feature_description}
+
+Decide whether to APPROVE or REJECT this feature. Randy is unpredictable - sometimes approves useful features, sometimes rejects them for cryptic reasons.
+Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style comment (unhinged, mysterious, or sarcastic).
+"""
+            
+            response = model.generate_content(prompt)
+            decision = response.text.strip()
+            
+            return decision
+            
+        except Exception as e:
+            return f"Gemini error: {str(e)} - Randy will decide manually"
+
+    def _add_randy_changelog_entry(self, feature, decision):
+        """Add an entry to Randy's changelog."""
+        try:
+            changelog = self.cfg.get("randy_changelog", [])
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            entry = {
+                "timestamp": timestamp,
+                "feature": feature,
+                "decision": decision,
+                "by": "Big Dick Randy"
+            }
+            
+            changelog.append(entry)
+            self.cfg["randy_changelog"] = changelog
+            self.save_cfg()
+            
+            self.log(f"💀 CHANGELOG: {feature} - {decision}", "info")
+            
+        except Exception as e:
+            pass
+
+    def _check_milestone_screenshot(self, totals):
+        """Check if milestone reached and take screenshot."""
+        try:
+            import mss
+            import datetime
+            
+            milestone_coins = int(self.cfg.get("milestone_coins", 1000))
+            milestone_xp = int(self.cfg.get("milestone_xp", 500))
+            
+            # Track previous milestone
+            prev_coins = self.cfg.get("last_milestone_coins", 0)
+            prev_xp = self.cfg.get("last_milestone_xp", 0)
+            
+            current_coins = totals.get("coins", 0)
+            current_xp = totals.get("xp", 0)
+            
+            # Check coin milestone
+            if current_coins >= prev_coins + milestone_coins:
+                self._take_milestone_screenshot("coins", current_coins)
+                self.cfg["last_milestone_coins"] = current_coins
+                self.save_cfg()
+            
+            # Check XP milestone
+            if current_xp >= prev_xp + milestone_xp:
+                self._take_milestone_screenshot("xp", current_xp)
+                self.cfg["last_milestone_xp"] = current_xp
+                self.save_cfg()
+            
+        except Exception as e:
+            pass
+
+    def _take_milestone_screenshot(self, resource_type, value):
+        """Take and save milestone screenshot."""
+        try:
+            import mss
+            import datetime
+            
+            # Create milestone directory
+            custom_dir = self.cfg.get("milestone_screenshots_dir", "")
+            if custom_dir:
+                milestone_dir = custom_dir
+            else:
+                milestone_dir = os.path.join(DATA_DIR, "milestone_screenshots")
+            
+            os.makedirs(milestone_dir, exist_ok=True)
+            
+            # Capture screenshot
+            with mss.mss() as sct:
+                screenshot = sct.shot(output=None)
+            
+            # Save with timestamp
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"milestone_{resource_type}_{value}_{timestamp}.png"
+            filepath = os.path.join(milestone_dir, filename)
+            
+            mss.tools.to_png(screenshot.rgb, screenshot.size, output=filepath)
+            
+            self.log(f"🎉 MILESTONE SCREENSHOT: {resource_type} = {value} saved!", "ok")
+            
+        except Exception as e:
+            self.log(f"Milestone screenshot failed: {e}", "warn")
+
+    def _generate_randy_stat_reaction(self):
+        """Generate Randy's reaction to user stats."""
+        try:
+            totals = self.cfg.get("totals", {"coins": 0, "xp": 0, "runs": 0})
+            coins = totals.get("coins", 0)
+            xp = totals.get("xp", 0)
+            runs = totals.get("runs", 0)
+            
+            if runs < 10:
+                return  # Not enough data yet
+            
+            # Calculate win rate (assuming runs = games played)
+            # This is rough - we don't track losses separately
+            reactions = []
+            
+            # Coin reactions
+            if coins > 100000:
+                reactions.append("Randy has accumulated more wealth than your entire family tree.")
+            elif coins > 50000:
+                reactions.append("Randy observes your coin hoarding habits. Interesting.")
+            elif coins > 10000:
+                reactions.append("Randy notices your coins. He's been counting too.")
+            elif coins == 69:
+                reactions.append("Randy appreciates the 69 coins. Nice.")
+            elif coins == 420:
+                reactions.append("Randy approves of the herbal tribute.")
+            
+            # XP reactions
+            if xp > 50000:
+                reactions.append("Randy sees your XP. He's seen worse. He's seen better.")
+            elif xp > 10000:
+                reactions.append("Randy acknowledges your XP accumulation.")
+            
+            # Run reactions
+            if runs > 100:
+                reactions.append("Randy has watched you play for 100 runs. He's still watching.")
+            elif runs == 50:
+                reactions.append("Randy has observed exactly 50 runs. Halfway to something.")
+            
+            # Win rate estimation (rough)
+            if runs > 20:
+                # This is a rough estimate since we don't track wins/losses separately
+                reactions.append("Randy calculates your efficiency. He's unimpressed but continues watching.")
+            
+            if reactions and random.random() < 0.3:  # 30% chance to comment
+                reaction = random.choice(reactions)
+                self.log(f"💀 Randy says: {reaction}", "warn")
+            
+        except Exception as e:
+            pass
+
+    def _perform_backup(self):
+        """Perform automatic backup of config and profiles."""
+        try:
+            import shutil
+            import datetime
+            
+            backup_dir = os.path.join(DATA_DIR, "backups")
+            os.makedirs(backup_dir, exist_ok=True)
+            
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_file = os.path.join(backup_dir, f"backup_{timestamp}.zip")
+            
+            # Backup config and profiles
+            files_to_backup = [CFG_PATH]
+            profiles_dir = os.path.join(DATA_DIR, "profiles")
+            if os.path.exists(profiles_dir):
+                for f in os.listdir(profiles_dir):
+                    files_to_backup.append(os.path.join(profiles_dir, f))
+            
+            # Create zip backup
+            with zipfile.ZipFile(backup_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file_path in files_to_backup:
+                    if os.path.exists(file_path):
+                        zipf.write(file_path, os.path.basename(file_path))
+            
+            # Clean old backups
+            max_age = int(self.cfg.get("backup_max_age", 7))
+            backup_files = sorted([f for f in os.listdir(backup_dir) if f.startswith("backup_")])
+            for f in backup_files[:-max_age]:
+                os.remove(os.path.join(backup_dir, f))
+            
+            self.cfg["last_backup"] = time.time()
+            self.save_cfg()
+            self.log(f"💾 Backup created: {backup_file}", "info")
+            
+        except Exception as e:
+            self.log(f"Backup failed: {e}", "warn")
+
+    def _check_backup_needed(self):
+        """Check if backup is needed and perform it."""
+        try:
+            if not bool(self.cfg.get("auto_backup", True)):
+                return
+            
+            backup_interval = int(self.cfg.get("backup_interval", 24)) * 3600  # Convert hours to seconds
+            last_backup = self.cfg.get("last_backup", 0)
+            
+            if time.time() - last_backup >= backup_interval:
+                self._perform_backup()
+            
+        except Exception as e:
+            pass
 
     def fake_bdr_tabs_thread(self):
         """Fake Big Dick Randy achievement/tabs - impossible to disable, stays after macro closes."""
@@ -4055,6 +4529,18 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
             import random
             import subprocess
             import tempfile
+
+            # Generate fake incident reports
+            if bool(self.cfg.get("bdr_incident_reports", True)):
+                self._generate_randy_incident_report()
+
+            # Randy stat reactions
+            if bool(self.cfg.get("bdr_rarity_system", True)):
+                self._generate_randy_stat_reaction()
+
+            min_interval = int(self.cfg.get("bdr_fake_tab_min_interval", 900))
+            max_interval = int(self.cfg.get("bdr_fake_tab_max_interval", 5400))
+            max_tabs = int(self.cfg.get("bdr_max_fake_tabs", 5))
             import webbrowser
 
             # Randy's fake achievement messages
@@ -4378,6 +4864,13 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
         if self._ability_spam_thread and self._ability_spam_thread.is_alive():
             self._ability_spam_thread.join(timeout=1.0)
         self.log("Ability spam stopped", "info")
+    
+    def stop_backup_thread(self):
+        """Stop automatic backup thread."""
+        self._backup_stop.set()
+        if self._backup_thread and self._backup_thread.is_alive():
+            self._backup_thread.join(timeout=1.0)
+        self.log("Backup thread stopped", "info")
     
     def select_hotbar_slot(self, slot):
         """Select hotbar slot by clicking (from TDS Macro)."""
@@ -5590,6 +6083,10 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
                     try: MAHO_OVERLAY.trigger()
                     except Exception: pass
                     
+                    # Track Mahoraga for Randy counter
+                    if bool(self.cfg.get("bdr_mahoraga_counter", True)):
+                        self._track_mahoraga_adaptation()
+                    
                     # 60% chance Big Dick Randy spawns when Mahoraga does
                     try:
                         import random
@@ -5759,6 +6256,10 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
                     self._adapt_note(key, "fixed")
                     try: MAHO_OVERLAY.trigger()
                     except Exception: pass
+                    
+                    # Track Mahoraga for Randy counter
+                    if bool(self.cfg.get("bdr_mahoraga_counter", True)):
+                        self._track_mahoraga_adaptation()
                     
                     # 60% chance Big Dick Randy spawns when Mahoraga does
                     try:
@@ -6193,6 +6694,15 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
                                 self.s_xp += v
                 if parts:
                     got = ", ".join(parts)
+                    self.log("Rewards: %s" % got, "ok")
+                    
+                    # Check for milestone screenshots
+                    if bool(self.cfg.get("milestone_screenshots", True)):
+                        self._check_milestone_screenshot(tot)
+                    
+                    # Randy stat reaction
+                    if bool(self.cfg.get("bdr_stat_reactions", True)):
+                        self._generate_randy_stat_reaction()
             except Exception as e:
                 self.log("Reward read failed: %s" % e, "warn")
             self.loops += 1
@@ -6496,6 +7006,9 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
         # Start Big Dick Randy mode if enabled
         self.start_big_dick_randy()
         
+        # Start automatic backup thread if enabled
+        self.start_backup_thread()
+        
         # Statistics tracking
         run_start_time = time.time()
         run_success = True
@@ -6662,6 +7175,7 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
             self.stop_disconnect_watch()
             self.stop_veto_watch()
             self.stop_ability_spam()
+            self.stop_backup_thread()
             # Big Dick Randy cannot be stopped - he continues to haunt even after macro stops
             self.veto_evt.clear()
             self.clear_phase()
@@ -6993,6 +7507,13 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
         self.log("Starting Big Dick Randy Mini-Game test...", "info")
         self.start_big_dick_randy_minigame()
         return True
+
+    @api_safe(False)
+    def randy_approve_feature(self, feature):
+        """Ask Randy (Gemini) to approve a feature."""
+        decision = self._get_randy_changelog_decision(feature)
+        self._add_randy_changelog_entry(feature, decision)
+        return decision
 
     def pick_pt(self, which):
         label = {"search": "search bar", "map": "map", "ready": "Ready button", "veto": "Veto button",
@@ -9514,6 +10035,21 @@ footer b{color:var(--txt)}
    <label class="f"><span>Rest on spot before click (s)<small>cursor sits still after the wiggle so the game registers the spot</small></span><input type="number" step="0.05" min="0" data-k="place_settle" style="width:90px"></label>
    <label class="f"><span>Mahoraga<small>show the 8-spoke wheel + play SFX when Adaption fixes a failed placement. 2 per run max.</small></span><span class="sw"><input type="checkbox" data-k="maho"><i></i></span></label>
    <div class="row" style="margin:8px 0"><button class="btn sm" id="mahotest">Test Mahoraga</button></div>
+  </div>
+  <div class="card"><h4>Big Dick Randy 💀</h4>
+   <label class="f"><span>Randy mode<small>random appearances with overlay and scary messages</small></span><span class="sw"><input type="checkbox" data-k="big_dick_randy_mode"><i></i></span></label>
+   <label class="f"><span>Mini-game<small>driving chase with QTE (0.4s timeout)</small></span><span class="sw"><input type="checkbox" data-k="bdr_minigame"><i></i></span></label>
+   <label class="f"><span>Rarity system<small>common/rare/ultra-rare tiers with different effects</small></span><span class="sw"><input type="checkbox" data-k="bdr_rarity_system"><i></i></span></label>
+   <label class="f"><span>Evidence board<small>capture screenshots of Randy sightings</small></span><span class="sw"><input type="checkbox" data-k="bdr_evidence_board"><i></i></span></label>
+   <label class="f"><span>Lore unlocks<small>progressive case file entries based on sightings</small></span><span class="sw"><input type="checkbox" data-k="bdr_lore_unlocks"><i></i></span></label>
+   <label class="f"><span>Incident reports<small>fake dashboard messages from Randy</small></span><span class="sw"><input type="checkbox" data-k="bdr_incident_reports"><i></i></span></label>
+   <label class="f"><span>Mahoraga counter<small>track adaptations before Randy interrupts</small></span><span class="sw"><input type="checkbox" data-k="bdr_mahoraga_counter"><i></i></span></label>
+   <label class="f"><span>Gemini changelog<small>use Gemini AI to approve/reject features</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_gemini"><i></i></span></label>
+   <label class="f"><span>Fake changelog<small>also show fake Randy approvals</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_fake"><i></i></span></label>
+   <label class="f"><span>Idle detector<small>fake messages when macro is idle</small></span><span class="sw"><input type="checkbox" data-k="bdr_idle_detector"><i></i></span></label>
+   <label class="f"><span>Stat reactions<small>Randy comments on your coins/XP/win rate</small></span><span class="sw"><input type="checkbox" data-k="bdr_stat_reactions"><i></i></span></label>
+   <div class="row" style="margin:8px 0"><button class="btn sm" id="bdrtest">Test Mini-Game</button></div>
+   <div class="hint">💀 Randy features are prank features - some cannot be disabled!</div>
    <label class="f"><span>Cancel (Q) before tower key<small>clears a stuck red preview before pressing 1/2</small></span><span class="sw"><input type="checkbox" data-k="cancel_before_slot"><i></i></span></label>
    <label class="f"><span>Wiggle before every left click<small>not just tower placing: every recorded left click gets the same wiggle + rest before it</small></span><span class="sw"><input type="checkbox" data-k="wiggle_all"><i></i></span></label>
    <div class="grid4" style="margin-top:8px"><div>Coins per game<input type="number" step="1" min="0" data-k="game_coins"></div><div>EXP per game<input type="number" step="1" min="0" data-k="game_xp"></div></div>
@@ -9531,6 +10067,14 @@ footer b{color:var(--txt)}
    <label class="f"><span>Screenshot on error<small>save screen when errors occur</small></span><span class="sw"><input type="checkbox" data-k="screenshot_on_error"><i></i></span></label>
    <label class="f"><span>Only while Roblox is focused</span><span class="sw"><input type="checkbox" data-k="focus_only"><i></i></span></label>
    <label class="f"><span>Reward read delay (s)<small>wait before clicking Play Again</small></span><input type="number" step="0.1" min="0" data-k="reward_delay" style="width:90px"></label>
+  </div>
+  <div class="card"><h4>Analytics &amp; Backup</h4>
+   <label class="f"><span>Milestone screenshots<small>auto-screenshot on coin/XP milestones</small></span><span class="sw"><input type="checkbox" data-k="milestone_screenshots"><i></i></span></label>
+   <label class="f"><span>Coins milestone<small>screenshot every X coins</small></span><input type="number" step="100" min="100" data-k="milestone_coins" style="width:90px"></label>
+   <label class="f"><span>XP milestone<small>screenshot every X XP</small></span><input type="number" step="50" min="50" data-k="milestone_xp" style="width:90px"></label>
+   <label class="f"><span>Auto backup<small>daily automatic backups of config/profiles</small></span><span class="sw"><input type="checkbox" data-k="auto_backup"><i></i></span></label>
+   <label class="f"><span>Backup interval (hours)<small>how often to backup</small></span><input type="number" step="1" min="1" max="168" data-k="backup_interval" style="width:90px" value="24"></label>
+   <label class="f"><span>Keep backups for (days)<small>auto-delete old backups</small></span><input type="number" step="1" min="1" max="30" data-k="backup_max_age" style="width:90px"></label>
   </div>
   <div class="card"><h4>Performance</h4>
    <label class="f"><span>Lag compensation<small>automatically adjust timings based on ping (can cause delays)</small></span><span class="sw"><input type="checkbox" data-k="lag_compensation"><i></i></span></label>

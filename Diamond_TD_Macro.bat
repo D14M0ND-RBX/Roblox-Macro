@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.53"
+VERSION = "1.54"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -887,6 +887,9 @@ DEFAULTS = {
     "auto_update_auto_install": False,  # Automatically install updates without asking
     "auto_update_rebuild_exe": False,  # Auto-rebuild EXE after updating source
     "github_repo_url": "https://github.com/D14M0ND-RBX/Roblox-Macro",
+    # Gemini game adaptation
+    "gemini_game_adaptation": False,  # Use Gemini to adapt to other games
+    "gemini_game_adaptation_on_profile_switch": True,  # Auto-query when switching profiles
     "stats": {"total_runs": 0, "successful_runs": 0, "failed_runs": 0, "total_time": 0.0, "avg_time": 0.0, "runs_per_hour": 0.0, "last_error": ""},
     "gamemode_cycle": {"enabled": False, "modes": ["molten"], "current_index": 0, "runs_per_mode": 10, "current_runs": 0},
     "gamemode_stats": {},
@@ -3720,6 +3723,95 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
             self.log("Gemini advisor requires google-generativeai. Run: pip install google-generativeai", "warn")
         except Exception as e:
             self.log("Gemini advisor failed: %s" % e, "err")
+    
+    def query_gemini_game_adaptation(self, game_name):
+        """Query Gemini for game-specific macro adaptation advice."""
+        if not bool(self.cfg.get("gemini_game_adaptation", False)):
+            return None
+        
+        api_key = self.cfg.get("gemini_api_key", "")
+        if not api_key:
+            self.log("Gemini game adaptation enabled but no API key provided", "warn")
+            return None
+        
+        try:
+            import google.generativeai as genai
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            
+            # Build prompt for game adaptation
+            prompt = f"""I'm creating a macro automation script for the game "{game_name}". 
+I need to know about this game's UI elements and mechanics to adapt the macro.
+
+Please provide JSON output with the following structure:
+{{
+  "game_type": "type of game (e.g., tower defense, action RPG, etc.)",
+  "ui_colors": {{
+    "primary_button_color": "hex color of main interactive buttons",
+    "secondary_button_color": "hex color of secondary buttons",
+    "health_bar_color": "hex color of health/HP bars",
+    "important_ui_elements": ["list of important UI element colors"]
+  }},
+  "ui_patterns": {{
+    "typical_button_size": "approximate button size in pixels",
+    "menu_structure": "how menus are typically organized",
+    "key_ui_elements": ["list of key UI elements to detect"]
+  }},
+  "timing": {{
+    "typical_transition_time": "approximate time for UI transitions in seconds",
+    "animation_duration": "approximate animation duration",
+    "recommended_delay": "recommended delay between actions"
+  }},
+  "detection_tips": ["specific tips for detecting game elements"],
+  "common_issues": ["common automation issues with this game"],
+  "adaptation_notes": "specific notes about adapting macros to this game"
+}}
+
+Keep responses technical and focused on UI automation. If you don't know the game, provide generic action RPG/adventure game defaults."""
+            
+            response = model.generate_content(prompt)
+            advice_text = response.text.strip()
+            
+            self.log("=" * 50, "info")
+            self.log(f"GEMINI GAME ADAPTATION: {game_name}", "info")
+            self.log("=" * 50, "info")
+            self.log(advice_text, "info")
+            self.log("=" * 50, "info")
+            
+            # Try to parse JSON from response
+            import json
+            try:
+                # Extract JSON from response (in case there's extra text)
+                json_start = advice_text.find('{')
+                json_end = advice_text.rfind('}') + 1
+                if json_start >= 0 and json_end > json_start:
+                    json_str = advice_text[json_start:json_end]
+                    advice = json.loads(json_str)
+                    
+                    # Save to file
+                    adaptation_file = os.path.join(DATA_DIR, f"game_adaptation_{game_name.replace(' ', '_')}.json")
+                    with open(adaptation_file, "w", encoding="utf-8") as f:
+                        json.dump(advice, f, indent=2)
+                    
+                    self.log(f"Game adaptation advice saved to: {adaptation_file}", "ok")
+                    return advice
+            except json.JSONDecodeError:
+                self.log("Could not parse JSON from Gemini response, saved as text", "warn")
+            
+            # Save as text if JSON parsing failed
+            adaptation_file = os.path.join(DATA_DIR, f"game_adaptation_{game_name.replace(' ', '_')}.txt")
+            with open(adaptation_file, "w", encoding="utf-8") as f:
+                f.write(advice_text)
+            
+            return None
+            
+        except ImportError:
+            self.log("Gemini game adaptation requires google-generativeai. Run: pip install google-generativeai", "warn")
+            return None
+        except Exception as e:
+            self.log("Gemini game adaptation failed: %s" % e, "err")
+            return None
     
     def send_discord_notification(self, message, include_screenshot=False):
         """Send notification to Discord webhook."""
@@ -10504,7 +10596,29 @@ class Api:
         self._e._active_pid = str(pid)
         self._e.cfg["active_profile"] = str(pid)
         self._e.save_cfg()
+        
+        # Query Gemini for game adaptation if enabled and not TDS profile
+        if bool(self.cfg.get("gemini_game_adaptation_on_profile_switch", True)) and pid != "tds":
+            profile = _load_profile(pid)
+            game_name = profile.get("name", pid)
+            # Remove "TDS" suffix if present
+            if game_name.endswith(" TDS"):
+                game_name = game_name[:-4].strip()
+            # Query Gemini for adaptation advice
+            adaptation = self.query_gemini_game_adaptation(game_name)
+            if adaptation:
+                # Could apply some defaults from adaptation here in the future
+                pass
+        
         return True
+
+    @api_safe({"ok": False, "err": ""})
+    def query_game_adaptation(self, game_name):
+        """Manually query Gemini for game adaptation advice."""
+        adaptation = self.query_gemini_game_adaptation(game_name)
+        if adaptation:
+            return {"ok": True, "err": ""}
+        return {"ok": False, "err": "Failed to get adaptation advice"}
 
     @api_safe("")
     def profile_active(self):
@@ -10825,6 +10939,12 @@ footer b{color:var(--txt)}
    <label class="f"><span>Mahoraga counter<small>track adaptations before Randy interrupts</small></span><span class="sw"><input type="checkbox" data-k="bdr_mahoraga_counter"><i></i></span></label>
    <label class="f"><span>Gemini changelog<small>use Gemini AI to approve/reject features</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_gemini"><i></i></span></label>
    <label class="f"><span>Fake changelog<small>also show fake Randy approvals</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_fake"><i></i></span></label>
+  </div>
+  <div class="card"><h4>Gemini Game Adaptation</h4>
+   <label class="f"><span>Game adaptation<small>use Gemini to adapt to other games when switching profiles</small></span><span class="sw"><input type="checkbox" data-k="gemini_game_adaptation"><i></i></span></label>
+   <label class="f"><span>Auto-query on profile switch<small>automatically ask Gemini when changing profiles</small></span><span class="sw"><input type="checkbox" data-k="gemini_game_adaptation_on_profile_switch"><i></i></span></label>
+   <div class="row" style="margin:8px 0"><input type="text" id="gameadaptname" placeholder="Game name (e.g., Black Myth Wukong)" style="flex:1"><button class="btn sm" id="gameadapt">Query Gemini</button></div>
+   <div class="hint">When you create a profile named after a game (e.g., "Black Myth Wukong"), Gemini will research the game and provide UI colors, timing, and detection tips to help adapt the macro.</div>
    <label class="f"><span>Idle detector<small>fake messages when macro is idle</small></span><span class="sw"><input type="checkbox" data-k="bdr_idle_detector"><i></i></span></label>
    <label class="f"><span>Stat reactions<small>Randy comments on your coins/XP/win rate</small></span><span class="sw"><input type="checkbox" data-k="bdr_stat_reactions"><i></i></span></label>
    <label class="f"><span>Fake awareness<small>Randy reacts to recording, profile switches, etc.</small></span><span class="sw"><input type="checkbox" data-k="bdr_fake_awareness"><i></i></span></label>
@@ -11041,7 +11161,7 @@ function bind(){
    }
  };
  $('#focusbtn').onclick=()=>{const a=$('#app');a.classList.toggle('focus');$('#focusbtn').textContent=a.classList.contains('focus')?'Unfocus':'Focus';setTimeout(sendDock,150)};
- $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();
+ $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;await api.query_game_adaptation(n)};
  $('#pk1').onclick=()=>api.pick('tl');$('#pk2').onclick=()=>api.pick('br');
  $('#openf').onclick=()=>api.open_folder();
  $('#dockbtn').onclick=async()=>{userUndock=false;manualPick=false;const r=rect();await api.dock(r[0],r[1],r[2],r[3])};

@@ -1,9 +1,21 @@
-# Diamond TD Macro  `v1.53 · Beta`
+# Diamond TD Macro  `v1.54 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
 
 ## What's New in v1.50
+
+### 🧠 Gemini Game Adaptation
+- **AI-powered game research** - When you create a profile named after a game, Gemini researches it
+- **UI color detection** - Gemini provides button colors, health bar colors, important UI element colors
+- **Timing advice** - Suggested delays, animation durations, transition times
+- **Detection tips** - Game-specific advice for detecting UI elements
+- **JSON format** - Returns structured data that can be used to auto-configure settings
+- **Auto-query on switch** - Automatically asks Gemini when you switch profiles (optional)
+- **Saves to file** - Advice saved to `%APPDATA%\TDRecorder\game_adaptation_[gamename].json`
+- **Works with any game** - Not just TDS - can adapt to Black Myth Wukong, Elden Ring, etc.
+- **Settings:** gemini_game_adaptation, gemini_game_adaptation_on_profile_switch
+- **Requires:** Gemini API key (same as advisor feature)
 
 ### 🔄 Auto Update System
 - **Check for updates from GitHub** - Automatically checks your repo for new versions

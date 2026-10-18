@@ -482,4 +482,23 @@ v1.53 - Bug Fixes
 - Tested all key package dependencies - all available
 - Tested GitHub update check - successfully fetches version from README
 - Version bumped to 1.53
+
+v1.54 - Gemini Game Adaptation
+- Added Gemini game adaptation system - AI research for other games
+- When switching to a non-TDS profile, Gemini researches the game name
+- Returns structured JSON with:
+  - UI colors (button colors, health bar colors, important elements)
+  - UI patterns (button sizes, menu structure, key elements)
+  - Timing advice (transition times, animation durations, recommended delays)
+  - Detection tips (game-specific automation advice)
+  - Common issues (known automation problems with the game)
+  - Adaptation notes (specific guidance for macro adaptation)
+- Auto-queries on profile switch (gemini_game_adaptation_on_profile_switch setting)
+- Saves advice to `%APPDATA%\TDRecorder\game_adaptation_[gamename].json`
+- Works with any game profile name (e.g., "Black Myth Wukong", "Elden Ring")
+- Master toggle: gemini_game_adaptation setting
+- Uses same Gemini API key as advisor feature
+- New "Gemini Game Adaptation" card in Settings (under Big Dick Randy section)
+- Can be used to provide game-specific defaults for future features
+- Version bumped to 1.54
 =============================

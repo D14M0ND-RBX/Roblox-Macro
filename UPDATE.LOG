@@ -434,4 +434,29 @@ v1.49 - Preflight System, Detection Diagnostics, One-Click Rollback
 - Settings: rollback_enabled, rollback_snapshots
 - API methods: run_preflight, create_rollback_snapshot, list_rollback_snapshots, restore_rollback_snapshot
 - Version bumped to 1.49
+
+v1.50 - Auto Update System
+- Added auto update system - check for updates from GitHub
+- Fetches README.md from GitHub repo to check version
+- Compares local version with GitHub version
+- Auto-check on start option (auto_update_check_on_start setting)
+- Configurable check interval (default 24 hours, 1-168 hours)
+- Manual "Check for updates" button in Settings UI
+- Download update files from GitHub (Diamond_TD_Macro.bat, README.md, UPDATE.LOG, requirements.txt)
+- Auto-install update option (auto_update_auto_install setting)
+- Automatic config backup before updating
+- Auto-restart after update installation (3 second delay)
+- New "Auto Update" card in Settings UI
+- Settings: auto_update_enabled, auto_update_check_on_start, auto_update_check_interval, auto_update_auto_install, github_repo_url
+- API methods: check_for_updates, download_and_install_update
+- Update files saved to %APPDATA%\TDRecorder\update_temp\
+- Clean cleanup of temp directory after install
+- Version bumped to 1.50
+
+v1.51 - Auto Update Enhancement
+- Changed default check interval to 0 (check every time macro opens)
+- Users can still set interval to reduce checks (1-168 hours)
+- Setting auto_update_check_interval now defaults to 0 instead of 24
+- README updated to reflect "check every time" behavior
+- Version bumped to 1.51
 =============================

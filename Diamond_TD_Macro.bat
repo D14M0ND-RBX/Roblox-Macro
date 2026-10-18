@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.49"
+VERSION = "1.51"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -879,6 +879,13 @@ DEFAULTS = {
     # Rollback system
     "rollback_enabled": True,  # Enable one-click rollback to previous config
     "rollback_snapshots": 5,  # Keep last 5 config snapshots
+    # Auto-update system
+    "auto_update_enabled": True,  # Check for updates automatically
+    "auto_update_check_on_start": True,  # Check for updates when macro starts
+    "auto_update_check_interval": 0,  # Check every X hours (0 = check every time)
+    "auto_update_last_check": 0,  # Timestamp of last update check
+    "auto_update_auto_install": False,  # Automatically install updates without asking
+    "github_repo_url": "https://github.com/D14M0ND-RBX/Roblox-Macro",
     "stats": {"total_runs": 0, "successful_runs": 0, "failed_runs": 0, "total_time": 0.0, "avg_time": 0.0, "runs_per_hour": 0.0, "last_error": ""},
     "gamemode_cycle": {"enabled": False, "modes": ["molten"], "current_index": 0, "runs_per_mode": 10, "current_runs": 0},
     "gamemode_stats": {},
@@ -5005,6 +5012,190 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
         except Exception as e:
             pass
 
+    def _check_for_updates(self, silent=False):
+        """Check for updates from GitHub (internal method)."""
+        try:
+            if not bool(self.cfg.get("auto_update_enabled", True)):
+                if not silent:
+                    self.log("Auto-update is disabled", "info")
+                return None
+            
+            # Check interval
+            check_interval = int(self.cfg.get("auto_update_check_interval", 24)) * 3600
+            last_check = self.cfg.get("auto_update_last_check", 0)
+            
+            if time.time() - last_check < check_interval:
+                if not silent:
+                    self.log("Update check skipped (checked recently)", "info")
+                return None
+            
+            # Mark as checked
+            self.cfg["auto_update_last_check"] = time.time()
+            self.save_cfg()
+            
+            # Fetch latest version from GitHub
+            repo_url = self.cfg.get("github_repo_url", "https://github.com/D14M0ND-RBX/Roblox-Macro")
+            
+            if not silent:
+                self.log(f"Checking for updates from {repo_url}...", "info")
+            
+            # Try to fetch README to get version
+            try:
+                import urllib.request
+                import urllib.error
+                
+                readme_url = f"{repo_url}/raw/main/README.md"
+                req = urllib.request.Request(readme_url, headers={'User-Agent': 'Diamond-Macro'})
+                
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    readme_content = response.read().decode('utf-8')
+                
+                # Extract version from README
+                import re
+                version_match = re.search(r'v(\d+\.\d+)', readme_content)
+                if version_match:
+                    latest_version = version_match.group(1)
+                else:
+                    if not silent:
+                        self.log("Could not parse version from README", "warn")
+                    return None
+                
+                # Compare with current version
+                current_version = VERSION
+                if latest_version == current_version:
+                    if not silent:
+                        self.log(f"Already up to date (v{current_version})", "ok")
+                    return None
+                elif latest_version > current_version:
+                    self.log(f"🆕 Update available: v{current_version} → v{latest_version}", "ok")
+                    return {
+                        "current": current_version,
+                        "latest": latest_version,
+                        "repo_url": repo_url
+                    }
+                else:
+                    if not silent:
+                        self.log(f"Current version ({current_version}) is newer than GitHub ({latest_version})", "info")
+                    return None
+                
+            except urllib.error.URLError as e:
+                if not silent:
+                    self.log(f"Failed to check for updates: {e}", "warn")
+                return None
+            except Exception as e:
+                if not silent:
+                    self.log(f"Update check error: {e}", "warn")
+                return None
+            
+        except Exception as e:
+            if not silent:
+                self.log(f"Update check failed: {e}", "warn")
+            return None
+
+    def download_update(self, update_info):
+        """Download update files from GitHub."""
+        try:
+            self.log("Downloading update files...", "info")
+            
+            repo_url = update_info["repo_url"]
+            update_dir = os.path.join(DATA_DIR, "update_temp")
+            os.makedirs(update_dir, exist_ok=True)
+            
+            # Files to download
+            files_to_download = [
+                "Diamond_TD_Macro.bat",
+                "README.md",
+                "UPDATE.LOG",
+                "requirements.txt"
+            ]
+            
+            import urllib.request
+            downloaded_files = []
+            
+            for filename in files_to_download:
+                try:
+                    file_url = f"{repo_url}/raw/main/{filename}"
+                    local_path = os.path.join(update_dir, filename)
+                    
+                    req = urllib.request.Request(file_url, headers={'User-Agent': 'Diamond-Macro'})
+                    with urllib.request.urlopen(req, timeout=30) as response:
+                        content = response.read()
+                    
+                    with open(local_path, 'wb') as f:
+                        f.write(content)
+                    
+                    downloaded_files.append(local_path)
+                    self.log(f"Downloaded: {filename}", "info")
+                    
+                except Exception as e:
+                    self.log(f"Failed to download {filename}: {e}", "warn")
+            
+            if downloaded_files:
+                self.log(f"Downloaded {len(downloaded_files)} files", "ok")
+                return update_dir
+            else:
+                self.log("No files downloaded", "err")
+                return None
+            
+        except Exception as e:
+            self.log(f"Download failed: {e}", "err")
+            return None
+
+    def install_update(self, update_dir):
+        """Install update files and restart."""
+        try:
+            self.log("Installing update...", "info")
+            
+            # Backup current config before updating
+            self._perform_backup()
+            
+            # Copy files from update dir to current directory
+            import shutil
+            here = os.path.dirname(os.path.abspath(__file__))
+            
+            update_files = [
+                "Diamond_TD_Macro.bat",
+                "README.md",
+                "UPDATE.LOG",
+                "requirements.txt"
+            ]
+            
+            for filename in update_files:
+                src = os.path.join(update_dir, filename)
+                dst = os.path.join(here, filename)
+                
+                if os.path.exists(src):
+                    shutil.copy2(src, dst)
+                    self.log(f"Updated: {filename}", "ok")
+            
+            # Clean up update dir
+            shutil.rmtree(update_dir, ignore_errors=True)
+            
+            self.log("✅ Update installed successfully!", "ok")
+            self.log("Restarting macro in 3 seconds...", "info")
+            
+            # Schedule restart
+            import threading
+            def restart_later():
+                import time
+                time.sleep(3)
+                # Restart the application
+                import sys
+                import subprocess
+                if getattr(sys, 'frozen', False):
+                    # Running as EXE
+                    subprocess.Popen([sys.executable], shell=True)
+                else:
+                    # Running as script
+                    subprocess.Popen([sys.executable, os.path.join(here, "Diamond_TD_Macro.bat")], shell=True)
+                os._exit(0)
+            
+            threading.Thread(target=restart_later, daemon=True).start()
+            
+        except Exception as e:
+            self.log(f"Install failed: {e}", "err")
+            shutil.rmtree(update_dir, ignore_errors=True)
+
     def fake_bdr_tabs_thread(self):
         """Fake Big Dick Randy achievement/tabs - impossible to disable, stays after macro closes."""
         try:
@@ -7466,6 +7657,10 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
             if not self.run_preflight_check():
                 self.log("Preflight check failed - macro not started", "err")
                 return
+        
+        # Check for updates if enabled
+        if bool(self.cfg.get("auto_update_check_on_start", True)):
+            self._check_for_updates(silent=True)
         if hybrid_mode:
             mode_label = "Hybrid (%s)" % profile.get("name", pid)
         elif tds_mode:
@@ -10353,6 +10548,33 @@ class Api:
         ok = self.restore_rollback_snapshot(snapshot_name)
         return {"ok": ok, "err": "" if ok else "Restore failed"}
 
+    @api_safe({"update_available": False, "current": "", "latest": "", "repo_url": ""})
+    def check_for_updates(self):
+        """Check for updates from GitHub."""
+        update_info = self._check_for_updates(silent=False)
+        if update_info:
+            return {
+                "update_available": True,
+                "current": update_info["current"],
+                "latest": update_info["latest"],
+                "repo_url": update_info["repo_url"]
+            }
+        return {"update_available": False, "current": VERSION, "latest": VERSION, "repo_url": ""}
+
+    @api_safe({"ok": False, "err": ""})
+    def download_and_install_update(self):
+        """Download and install update."""
+        update_info = self._check_for_updates(silent=True)
+        if not update_info:
+            return {"ok": False, "err": "No update available"}
+        
+        update_dir = self.download_update(update_info)
+        if not update_dir:
+            return {"ok": False, "err": "Download failed"}
+        
+        self.install_update(update_dir)
+        return {"ok": True, "err": ""}
+
     def _on_close(self):
         self._e.shutdown()
 
@@ -10618,6 +10840,14 @@ footer b{color:var(--txt)}
    <label class="f"><span>Show confidence<small>display detection scores</small></span><span class="sw"><input type="checkbox" data-k="diagnostics_show_confidence"><i></i></span></label>
    <label class="f"><span>Show reason<small>display why detection was accepted/rejected</small></span><span class="sw"><input type="checkbox" data-k="diagnostics_show_reason"><i></i></span></label>
   </div>
+  <div class="card"><h4>Auto Update</h4>
+   <label class="f"><span>Auto update enabled<small>check for updates from GitHub</small></span><span class="sw"><input type="checkbox" data-k="auto_update_enabled"><i></i></span></label>
+   <label class="f"><span>Check on start<small>auto-check when macro starts</small></span><span class="sw"><input type="checkbox" data-k="auto_update_check_on_start"><i></i></span></label>
+   <label class="f"><span>Check interval (hours)<small>0 = every time, 1-168 = hours</small></span><input type="number" step="1" min="0" max="168" data-k="auto_update_check_interval" style="width:90px" value="0"></label>
+   <label class="f"><span>Auto install<small>automatically install updates without asking</small></span><span class="sw"><input type="checkbox" data-k="auto_update_auto_install"><i></i></span></label>
+   <div class="row" style="margin:8px 0"><button class="btn sm" id="checkupdate">Check for updates</button><button class="btn sm" id="installupdate" style="display:none">Install update</button></div>
+   <div id="updatestatus" class="hint" style="margin-top:8px">Click to check for updates</div>
+  </div>
   <div class="card"><h4>Performance</h4>
    <label class="f"><span>Lag compensation<small>automatically adjust timings based on ping (can cause delays)</small></span><span class="sw"><input type="checkbox" data-k="lag_compensation"><i></i></span></label>
    <label class="f"><span>Current lag multiplier<small>auto-adjusted if lag compensation is on</small></span><input type="number" step="0.1" min="1.0" max="4.0" data-k="lag_multiplier" style="width:90px" readonly></label>
@@ -10755,6 +10985,31 @@ function bind(){
  $('#startbtn').onclick=()=>mode==='idle'?api.start():api.stop();
  $('#recbtn').onclick=()=>api.record_toggle();
  $('#testbtn').onclick=()=>api.test_scan();
+ $('#checkupdate').onclick=async()=>{
+   const r=await api.check_for_updates();
+   const s=$('#updatestatus');
+   if(r.update_available){
+     s.textContent=`Update available: v${r.current} → v${r.latest}`;
+     s.style.color='var(--ok)';
+     $('#installupdate').style.display='';
+   }else{
+     s.textContent='Already up to date';
+     s.style.color='var(--mut)';
+     $('#installupdate').style.display='none';
+   }
+ };
+ $('#installupdate').onclick=async()=>{
+   const s=$('#updatestatus');
+   s.textContent='Downloading update...';
+   s.style.color='var(--warn)';
+   const r=await api.download_and_install_update();
+   if(r.ok){
+     s.textContent='Update installed! Restarting...';
+   }else{
+     s.textContent='Update failed: '+r.err;
+     s.style.color='var(--bad)';
+   }
+ };
  $('#focusbtn').onclick=()=>{const a=$('#app');a.classList.toggle('focus');$('#focusbtn').textContent=a.classList.contains('focus')?'Unfocus':'Focus';setTimeout(sendDock,150)};
  $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();
  $('#pk1').onclick=()=>api.pick('tl');$('#pk2').onclick=()=>api.pick('br');

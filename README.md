@@ -1,9 +1,24 @@
-# Diamond TD Macro  `v1.49 · Beta`
+# Diamond TD Macro  `v1.51 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
 
-## What's New in v1.49
+## What's New in v1.50
+
+### 🔄 Auto Update System
+- **Check for updates from GitHub** - Automatically checks your repo for new versions
+- **Version comparison** - Compares local version with GitHub README
+- **Check every time** - Checks every time the macro opens (can be turned off)
+- **Manual check button** - "Check for updates" button in Settings
+- **One-click install** - Download and install updates automatically
+- **Auto-restart** - Macro restarts after update installation
+- **Config backup** - Automatically backs up config before updating
+- **Downloads core files** - Updates Diamond_TD_Macro.bat, README.md, UPDATE.LOG, requirements.txt
+- **Configurable interval** - Set how often to check (0 = every time, 1-168 hours)
+- **Auto-install option** - Can automatically install without asking (optional)
+- **Safe rollback** - If update fails, keeps working version
+- **UI section** - New "Auto Update" card in Settings
+- **Settings:** auto_update_enabled, auto_update_check_on_start, auto_update_check_interval, auto_update_auto_install, github_repo_url
 
 ### 🔍 Preflight System
 - **Validate before starting** - Checks everything before macro begins

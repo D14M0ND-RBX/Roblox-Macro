@@ -619,4 +619,11 @@ v1.63 - Fix Qt Initialization with Delayed Randy Startup
 - Added Qt instance checks in both Randy popup and easter egg threads
 - Prevents QPixmap errors from blocking macro startup
 - Version bumped to 1.63
+
+v1.64 - Fix Ability Spam Causing 12345 Key Spam
+- Ability spam was enabled by default, causing keys 1-5 to be spammed every 0.5s
+- Changed default from True to False to prevent unwanted key spam
+- Also disabled in user's existing config
+- Ability spam must now be explicitly enabled in settings
+- Version bumped to 1.64
 =============================

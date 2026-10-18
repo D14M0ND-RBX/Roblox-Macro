@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.63"
+VERSION = "1.64"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -790,7 +790,7 @@ DEFAULTS = {
     "map_database": False,  # Enable map strategy database - NOT IMPLEMENTED
     "gemini_advisor": False,  # Enable Gemini 2.5 Flash AI advisor
     "gemini_api_key": "",  # Gemini API key
-    "ability_spam": True,  # Automatically spam tower abilities when available
+    "ability_spam": False,  # Automatically spam tower abilities when available
     "ability_spam_interval": 0.5,  # Interval between ability spams (seconds)
     "time_scale_mode": "OFF",  # Time scale mode (OFF, 1.5x, 2x) - speeds up game
     "time_scale_2x": False,  # Enable 2x speed during recording (clicks arrow then 2x button)
@@ -2520,7 +2520,7 @@ class Engine:
         # ---- Tower UI caching (from TDS Macro) ----
         self._tower_ui_cache = {"x": 0, "y": 0, "timestamp": 0}
         # ---- Ability spam system ----
-        self._ability_spam_active = bool(self.cfg.get("ability_spam", True))
+        self._ability_spam_active = bool(self.cfg.get("ability_spam", False))
         self._ability_spam_thread = None
         self._ability_spam_stop = threading.Event()
         # ---- Big Dick Randy mode ----

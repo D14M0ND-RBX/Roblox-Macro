@@ -501,4 +501,70 @@ v1.54 - Gemini Game Adaptation
 - New "Gemini Game Adaptation" card in Settings (under Big Dick Randy section)
 - Can be used to provide game-specific defaults for future features
 - Version bumped to 1.54
+
+v1.55 - Recording Tags, Randy Voice Lines, Advice Generator, Advanced Features
+- Added recording tags system - organize recordings by tags
+- API support: get_recording_tags, set_recording_tags, get_all_tags, get_recordings_by_tag
+- Tag recordings by map, gamemode, or custom tags
+- Filter recordings by specific tags
+- Settings: recording_tags_enabled, recording_tags (data structure)
+- Added Randy voice lines (TTS) - Randy speaks when he appears
+- Uses Windows TTS via pyttsx3 library
+- Random voice lines: "Big Dick Randy is watching you", "Randy knows all", etc.
+- Configurable voice chance (default 50%)
+- Settings: randy_voice_lines, randy_voice_chance
+- Added pyttsx3>=2.90 to requirements.txt
+- Added Randy advice generator - terrible comedic advice
+- Lines include: "Just click faster bro", "Put the tower in the enemy spawn", "Did you try turning it off and on again?"
+- Manual trigger button in Settings
+- 20 different advice lines randomly selected
+- Settings: randy_advice_generator
+- API method: get_randy_advice
+- Added advanced features framework:
+  - Quick actions bar (toggleable)
+  - Smart retry system (toggleable, learns from failures)
+  - Randy easter eggs in UI (toggleable)
+  - Per-recording stats tracking (data structure ready)
+  - Failure database for smart retry
+- Settings: quick_actions_bar, smart_retry, randy_easter_eggs, recording_stats, failure_database
+- Added new UI sections in Settings:
+  - "Recording Tags" card
+  - "Advanced Features" card
+  - "Get Randy Advice" button
+- Randy voice lines integrated into popup appearance logic
+- Version bumped to 1.55
+
+v1.56 - Randy Easter Eggs, Smart Retry Logic
+- Added Randy easter eggs - hidden icons appearing randomly on screen
+- Tiny Randy icon (30x60) appears at random positions every 5-15 minutes
+- Stays for 5-10 seconds then disappears
+- Uses PyQt5 overlay with no focus/no-activation
+- Log message: "Randy easter egg appeared - did you see it?"
+- Thread: randy_easter_eggs_thread (daemon)
+- Auto-starts on macro launch if enabled
+- Settings: randy_easter_eggs
+- Added smart retry logic - learns from placement failures
+- Tracks failures per spot (key: "slot_x_y")
+- Failure database stores: failure count, last strategy used
+- Adaptive retry strategies:
+  - 1st failure: Log it only
+  - 2nd failure: Try longer settle time (1.5x normal)
+  - 3rd+ failures: Try aggressive nudge (10px left/right based on screen position)
+- Failure database persisted to config
+- Integrated into verify_placement and verify_generic logic
+- Settings: smart_retry, failure_database
+- Syntax fix: Fixed try/except block in randy_easter_eggs_thread
+- Bug check passed: Python syntax OK
+- Version bumped to 1.56
+
+v1.57 - Future Feature Settings
+- Added settings for future features (pending UI overhaul):
+  - Recording comparison (recording_comparison_enabled, recording_comparison_mode)
+  - Plugin system (plugin_system_enabled, plugins, plugin_directories)
+  - Quick actions bar (quick_actions_bar - already existed)
+  - Per-recording stats (recording_stats - already existed)
+- Updated Advanced Features card in Settings UI
+- Added hint explaining features requiring UI overhaul
+- All settings saved and ready for future implementation
+- Version bumped to 1.57
 =============================

@@ -1,9 +1,84 @@
-# Diamond TD Macro  `v1.54 · Beta`
+# Diamond TD Macro  `v1.57 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
 
 ## What's New in v1.50
+
+### 🥚 Randy Easter Eggs
+- **Hidden Randy icons** - Tiny Randy appears randomly on screen
+- **Random positioning** - Appears anywhere on screen every 5-15 minutes
+- **Stays briefly** - Shows for 5-10 seconds then disappears
+- **No interaction** - Just visual, doesn't interfere with macro
+- **Log message** - "Randy easter egg appeared - did you see it?"
+- **Settings:** randy_easter_eggs
+- **Thread:** randy_easter_eggs_thread (daemon)
+
+### 🔌 Plugin System (Future)
+- **Modular architecture** - Enable plugin system for extensibility
+- **Custom plugins** - Load plugins from custom directories
+- **Settings:** plugin_system_enabled, plugins, plugin_directories
+- **Status:** Settings added, implementation pending massive UI overhaul
+
+### 📊 Recording Comparison (Future)
+- **Compare recordings** - Diff two recordings side-by-side
+- **Visual diff** - Show timing and click differences
+- **Settings:** recording_comparison_enabled, recording_comparison_mode
+- **Status:** Settings added, implementation pending UI overhaul
+
+### 🎯 Quick Actions Bar (Future)
+- **Toolbar** - Common actions in window header
+- **Settings:** quick_actions_bar
+- **Status:** Setting added, implementation pending UI redesign
+
+### 📈 Per-Recording Stats (Future)
+- **Per-recording tracking** - Success rate per recording
+- **Data structure ready** - recording_stats in config
+- **Status:** Data structure ready, UI pending
+
+### 🧠 Smart Retry Logic
+- **Learns from failures** - Tracks failures per placement spot
+- **Failure database** - Stores failure count and last strategy used
+- **Adaptive strategies:**
+  - 1st failure: Log it
+  - 2nd failure: Try longer settle time (1.5x)
+  - 3rd+ failures: Try aggressive nudge (10px in appropriate direction)
+- **Persistent tracking** - Saved to config
+- **Settings:** smart_retry, failure_database (data)
+- **Integrated into** verify_placement logic
+
+### 🏷️ Recording Tags
+- **Tag recordings** - Organize recordings by map, gamemode, or custom tags
+- **Filter by tags** - Quickly find recordings for specific maps
+- **API support** - Full API for managing tags (get, set, list all, filter)
+- **Per-recording tags** - Each recording can have multiple tags
+- **All tags view** - See all unique tags across recordings
+- **Find by tag** - Get all recordings with a specific tag
+- **Settings:** recording_tags_enabled, recording_tags (data structure)
+- **API methods:** get_recording_tags, set_recording_tags, get_all_tags, get_recordings_by_tag
+
+### 🔊 Randy Voice Lines (TTS)
+- **Randy speaks** - Uses Windows TTS to speak when Randy appears
+- **Random lines** - Various creepy/funny voice lines
+- **Configurable chance** - 50% chance to speak by default
+- **Requires pyttsx3** - Uses Python text-to-speech library
+- **Settings:** randy_voice_lines, randy_voice_chance
+- **Added to requirements:** pyttsx3>=2.90
+
+### 💬 Randy Advice Generator
+- **Terrible advice** - Randy gives obviously bad advice
+- **Hilarious lines** - "Just click faster bro", "Put the tower in the enemy spawn"
+- **Manual trigger** - "Get Randy Advice" button in Settings
+- **20 different lines** - Randomly selected each time
+- **Settings:** randy_advice_generator
+- **API method:** get_randy_advice
+
+### ⚡ Advanced Features
+- **Quick actions bar** - Toolbar with common actions (toggleable)
+- **Smart retry** - Learn from past failures (toggleable)
+- **Randy easter eggs** - Hidden Randy icons in UI (toggleable)
+- **Per-recording stats** - Track success rate per recording (data structure ready)
+- **Settings:** quick_actions_bar, smart_retry, randy_easter_eggs, recording_stats, failure_database
 
 ### 🧠 Gemini Game Adaptation
 - **AI-powered game research** - When you create a profile named after a game, Gemini researches it

@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.54"
+VERSION = "1.57"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -890,6 +890,30 @@ DEFAULTS = {
     # Gemini game adaptation
     "gemini_game_adaptation": False,  # Use Gemini to adapt to other games
     "gemini_game_adaptation_on_profile_switch": True,  # Auto-query when switching profiles
+    # Recording tags system
+    "recording_tags_enabled": True,  # Enable tagging recordings
+    "recording_tags": {},  # Tag assignments: {"rec_name": ["tag1", "tag2"]}
+    # Quick actions bar
+    "quick_actions_bar": True,  # Show quick actions toolbar
+    # Per-recording stats
+    "recording_stats": {},  # Stats per recording: {"rec_name": {"success": 0, "fail": 0, "avg_time": 0}}
+    # Smarter retry logic
+    "smart_retry": True,  # Learn from past failures
+    "failure_database": {},  # Track failures per spot
+    # Randy voice lines
+    "randy_voice_lines": True,  # Randy speaks when he appears (TTS)
+    "randy_voice_chance": 0.5,  # 50% chance to speak when appearing
+    # Randy easter eggs
+    "randy_easter_eggs": True,  # Hidden Randy icons in UI
+    # Randy advice generator
+    "randy_advice_generator": True,  # Randy gives terrible advice
+    # Recording comparison (future UI feature)
+    "recording_comparison_enabled": True,  # Enable recording comparison
+    "recording_comparison_mode": "visual",  # visual or text diff
+    # Plugin system (future massive UI overhaul)
+    "plugin_system_enabled": False,  # Enable plugin system
+    "plugins": {},  # Loaded plugins
+    "plugin_directories": [],  # Custom plugin directories
     "stats": {"total_runs": 0, "successful_runs": 0, "failed_runs": 0, "total_time": 0.0, "avg_time": 0.0, "runs_per_hour": 0.0, "last_error": ""},
     "gamemode_cycle": {"enabled": False, "modes": ["molten"], "current_index": 0, "runs_per_mode": 10, "current_runs": 0},
     "gamemode_stats": {},
@@ -3813,6 +3837,54 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             self.log("Gemini game adaptation failed: %s" % e, "err")
             return None
     
+    def speak_randy_line(self, text):
+        """Use Windows TTS to speak Randy lines."""
+        if not bool(self.cfg.get("randy_voice_lines", True)):
+            return
+        
+        try:
+            import pyttsx3
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 150)  # Slower for comedic effect
+            engine.setProperty('volume', 0.9)
+            engine.say(text)
+            engine.runAndWait()
+        except ImportError:
+            self.log("Randy voice lines require pyttsx3. Run: pip install pyttsx3", "warn")
+        except Exception as e:
+            self.log("Randy voice failed: %s" % e, "err")
+    
+    def generate_randy_advice(self):
+        """Generate terrible Randy advice."""
+        if not bool(self.cfg.get("randy_advice_generator", True)):
+            return None
+        
+        advice_lines = [
+            "Just click faster bro",
+            "Put the tower in the enemy spawn",
+            "Did you try turning it off and on again?",
+            "More tower = more good",
+            "Just aim better lol",
+            "Have you tried not sucking?",
+            "Random clicks are the best clicks",
+            "Macro is broke, fix it yourself",
+            "Just use your brain (if you have one)",
+            "Click the thing that makes the other thing happen",
+            "Pro tip: don't lose",
+            "Strategy: be better",
+            "Just spam 1 and 2, that's pro gaming",
+            "Tower placement doesn't matter if you're bad",
+            "Upgrade everything immediately",
+            "Don't upgrade anything, save for the big one",
+            "Actually both of those are wrong",
+            "I'm not even helping am I?",
+            "Just let Randy play for you",
+            "Big Dick Randy knows all"
+        ]
+        
+        import random
+        return random.choice(advice_lines)
+    
     def send_discord_notification(self, message, include_screenshot=False):
         """Send notification to Discord webhook."""
         if not bool(self.cfg.get("discord_notifications", False)):
@@ -4160,6 +4232,12 @@ Keep responses technical and focused on UI automation. If you don't know the gam
         self._bdr_popup_thread = threading.Thread(target=self.little_bdr_popups_thread, daemon=False, name="little-bdr-popups")
         self._bdr_popup_thread.start()
         self.log("💀 Little Big Dick Randy popups activated - IMPOSSIBLE TO DISABLE 💀", "warn")
+    
+    def start_randy_easter_eggs(self):
+        """Start Randy easter eggs thread - hidden icons in UI."""
+        self._easter_egg_thread = threading.Thread(target=self.randy_easter_eggs_thread, daemon=True, name="randy-easter-eggs")
+        self._easter_egg_thread.start()
+        self.log("🥚 Randy easter eggs activated", "info")
 
     def start_fake_bdr_tabs(self):
         """Start fake Big Dick Randy achievement tabs - impossible to disable."""
@@ -4289,6 +4367,18 @@ Keep responses technical and focused on UI automation. If you don't know the gam
                     # Log rarity
                     self.log(f"💀 [{rarity}] Randy appeared at ({randy_x}, {randy_y})", "info")
 
+                    # Speak if voice lines enabled
+                    if bool(self.cfg.get("randy_voice_lines", True)) and random.random() < float(self.cfg.get("randy_voice_chance", 0.5)):
+                        voice_lines = [
+                            "Big Dick Randy is watching you",
+                            "I see what you're doing",
+                            "Randy knows all",
+                            "Big Dick Randy has arrived",
+                            "Watch your back",
+                            "Randy sees everything"
+                        ]
+                        self.speak_randy_line(random.choice(voice_lines))
+
                     # Stay for 3-8 seconds (longer for rare)
                     stay_time = random.uniform(3, 8) * stay_mult
                     time.sleep(stay_time)
@@ -4302,6 +4392,72 @@ Keep responses technical and focused on UI automation. If you don't know the gam
                     # Update lore progress
                     if bool(self.cfg.get("bdr_lore_unlocks", True)):
                         self._update_randy_lore(rarity)
+                    
+        except Exception as e:
+            self.log(f"Randy popups error: {e}", "err")
+    
+    def randy_easter_eggs_thread(self):
+        """Randy easter eggs - hidden icons appearing randomly in UI."""
+        try:
+            if not bool(self.cfg.get("randy_easter_eggs", True)):
+                return
+            
+            import random
+            from PIL import Image
+            from PyQt5.QtCore import Qt
+            from PyQt5.QtGui import QPixmap, QImage, QGuiApplication, QPainter, QColor
+            from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+
+            # Load small Randy icon
+            img_path = os.path.join(IMG_DIR, "big_dick_randy.png")
+            if not os.path.exists(img_path):
+                return
+
+            try:
+                from PIL import Image as PILImage
+                pil_img = PILImage.open(img_path)
+                pil_img = pil_img.resize((30, 60), PILImage.LANCZOS)
+                bdr_qimg = QImage(pil_img.tobytes(), pil_img.width, pil_img.height, QImage.Format_RGBA8888)
+                bdr_pixmap = QPixmap.fromImage(bdr_qimg)
+            except Exception:
+                return
+
+            app = QApplication.instance() or QApplication([])
+
+            while True:
+                # Random wait between appearances (5-15 minutes)
+                time.sleep(random.uniform(300, 900))
+
+                # Create tiny Randy icon overlay
+                wdg = QWidget(None, Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
+                wdg.setAttribute(Qt.WA_TranslucentBackground, True)
+                wdg.setAttribute(Qt.WA_ShowWithoutActivating, True)
+                wdg.setAttribute(Qt.WA_DeleteOnClose, True)
+                wdg.setFocusPolicy(Qt.NoFocus)
+                wdg.setFixedSize(40, 80)
+
+                # Random position on screen
+                g = QGuiApplication.primaryScreen().availableGeometry()
+                randy_x = random.randint(50, g.width() - 100)
+                randy_y = random.randint(50, g.height() - 150)
+                wdg.move(randy_x, randy_y)
+
+                wdg.show()
+
+                # Draw Randy
+                qp = QPainter(wdg)
+                qp.setRenderHint(QPainter.Antialiasing)
+                qp.drawPixmap(5, 10, bdr_pixmap.scaled(30, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                wdg.update()
+
+                # Stay for 5-10 seconds
+                time.sleep(random.uniform(5, 10))
+
+                wdg.close()
+                self.log("🥚 Randy easter egg appeared - did you see it?", "info")
+
+        except Exception as e:
+            self.log(f"Randy easter eggs error: {e}", "err")
 
         except Exception as e:
             pass  # Don't log errors for this prank feature
@@ -7280,6 +7436,33 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                             if abs(q[0] - v[3]) < 1 and abs(q[1] - v[4]) < 1:
                                 q[2], q[3] = v[5] + ox, v[6] + oy
                         self.log("Tower landed %+dpx, %+dpx from the recorded spot - its upgrade clicks follow it" % (v[5] + ox, v[6] + oy), "ok")
+                    elif not ok and bool(self.cfg.get("smart_retry", True)):
+                        # Smart retry: track failure and try different approach
+                        spot_key = f"{v[1]}_{v[2]}"
+                        failure_db = self.cfg.get("failure_database", {})
+                        if spot_key not in failure_db:
+                            failure_db[spot_key] = {"failures": 0, "last_strategy": "normal"}
+                        failure_db[spot_key]["failures"] += 1
+                        
+                        # Try different strategies based on failure count
+                        if failure_db[spot_key]["failures"] >= 3:
+                            # After 3 failures, try aggressive nudge
+                            nudge_px = int(self.cfg.get("nudge_px", 10))
+                            side = -1 if v[1] < self.width() / 2 else 1
+                            ox, oy = side * nudge_px, 0
+                            self.log(f"Smart retry: aggressive nudge after {failure_db[spot_key]['failures']} failures", "warn")
+                            failure_db[spot_key]["last_strategy"] = "aggressive_nudge"
+                        elif failure_db[spot_key]["failures"] >= 2:
+                            # After 2 failures, try longer settle time
+                            settle = max(settle * 1.5, 0.5)
+                            self.log(f"Smart retry: longer settle time after {failure_db[spot_key]['failures']} failures", "warn")
+                            failure_db[spot_key]["last_strategy"] = "longer_settle"
+                        else:
+                            # First failure: just log it
+                            self.log(f"Smart retry: first failure at this spot, will try alternative approaches", "info")
+                        
+                        self.cfg["failure_database"] = failure_db
+                        self.save_cfg()
                     # Only a real RETRY pushes the rest of the recording back. A normal check (~0.5s) used to push
                     # everything back too, so 14 placements = 5-10s of drift on every later E / click. Now the timeline
                     # stays on the recorded clock and the next events just fire straight away until it has caught up.
@@ -10619,6 +10802,54 @@ class Api:
         if adaptation:
             return {"ok": True, "err": ""}
         return {"ok": False, "err": "Failed to get adaptation advice"}
+    
+    # ---- Recording Tags API ----
+    @api_safe({"tags": []})
+    def get_recording_tags(self, rec_name):
+        """Get tags for a recording."""
+        tags = self.cfg.get("recording_tags", {})
+        return tags.get(rec_name, [])
+    
+    @api_safe(False)
+    def set_recording_tags(self, rec_name, tags):
+        """Set tags for a recording."""
+        if "recording_tags" not in self.cfg:
+            self.cfg["recording_tags"] = {}
+        self.cfg["recording_tags"][rec_name] = tags
+        self.save_cfg()
+        return True
+    
+    @api_safe({"all_tags": []})
+    def get_all_tags(self):
+        """Get all unique tags across recordings."""
+        tags = self.cfg.get("recording_tags", {})
+        all_tags = set()
+        for rec_tags in tags.values():
+            all_tags.update(rec_tags)
+        return sorted(list(all_tags))
+    
+    @api_safe({"recordings": []})
+    def get_recordings_by_tag(self, tag):
+        """Get all recordings with a specific tag."""
+        tags = self.cfg.get("recording_tags", {})
+        recordings = []
+        for rec_name, rec_tags in tags.items():
+            if tag in rec_tags:
+                recordings.append(rec_name)
+        return recordings
+    
+    # ---- Randy Features API ----
+    @api_safe({"advice": ""})
+    def get_randy_advice(self):
+        """Get a piece of terrible Randy advice."""
+        advice = self.generate_randy_advice()
+        return {"advice": advice or "Big Dick Randy has no advice for you"}
+    
+    @api_safe(False)
+    def speak_randy(self, text):
+        """Speak a Randy line via TTS."""
+        self.speak_randy_line(text)
+        return True
 
     @api_safe("")
     def profile_active(self):
@@ -10939,12 +11170,35 @@ footer b{color:var(--txt)}
    <label class="f"><span>Mahoraga counter<small>track adaptations before Randy interrupts</small></span><span class="sw"><input type="checkbox" data-k="bdr_mahoraga_counter"><i></i></span></label>
    <label class="f"><span>Gemini changelog<small>use Gemini AI to approve/reject features</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_gemini"><i></i></span></label>
    <label class="f"><span>Fake changelog<small>also show fake Randy approvals</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_fake"><i></i></span></label>
+   <label class="f"><span>Idle detector<small>fake messages when macro is idle</small></span><span class="sw"><input type="checkbox" data-k="bdr_idle_detector"><i></i></span></label>
+   <label class="f"><span>Stat reactions<small>Randy comments on your coins/XP/win rate</small></span><span class="sw"><input type="checkbox" data-k="bdr_stat_reactions"><i></i></span></label>
+   <label class="f"><span>Fake awareness<small>Randy reacts to recording, profile switches, etc.</small></span><span class="sw"><input type="checkbox" data-k="bdr_fake_awareness"><i></i></span></label>
+   <label class="f"><span>Case file<small>unlock cursed lore entries about Randy</small></span><span class="sw"><input type="checkbox" data-k="bdr_case_file"><i></i></span></label>
+   <label class="f"><span>Fake takeover<small>Randy "hacks" the overlay (changes name/profile/scale)</small></span><span class="sw"><input type="checkbox" data-k="bdr_fake_takeover"><i></i></span></label>
+   <label class="f"><span>Randy sightings<small>capture screenshots of Randy's overlay</small></span><span class="sw"><input type="checkbox" data-k="bdr_sightings"><i></i></span></label>
+   <label class="f"><span>Voice lines<small>Randy speaks when he appears (TTS)</small></span><span class="sw"><input type="checkbox" data-k="randy_voice_lines"><i></i></span></label>
+   <label class="f"><span>Advice generator<small>Randy gives terrible advice</small></span><span class="sw"><input type="checkbox" data-k="randy_advice_generator"><i></i></span></label>
+   <div class="row" style="margin:8px 0"><button class="btn sm" id="randyadvice">Get Randy Advice</button></div>
+   <div class="row" style="margin:8px 0"><button class="btn sm" id="bdrtest">Test Mini-Game</button></div>
+   <div class="hint">💀 Randy features are prank features - some cannot be disabled!</div>
   </div>
   <div class="card"><h4>Gemini Game Adaptation</h4>
    <label class="f"><span>Game adaptation<small>use Gemini to adapt to other games when switching profiles</small></span><span class="sw"><input type="checkbox" data-k="gemini_game_adaptation"><i></i></span></label>
    <label class="f"><span>Auto-query on profile switch<small>automatically ask Gemini when changing profiles</small></span><span class="sw"><input type="checkbox" data-k="gemini_game_adaptation_on_profile_switch"><i></i></span></label>
    <div class="row" style="margin:8px 0"><input type="text" id="gameadaptname" placeholder="Game name (e.g., Black Myth Wukong)" style="flex:1"><button class="btn sm" id="gameadapt">Query Gemini</button></div>
    <div class="hint">When you create a profile named after a game (e.g., "Black Myth Wukong"), Gemini will research the game and provide UI colors, timing, and detection tips to help adapt the macro.</div>
+  </div>
+  <div class="card"><h4>Recording Tags</h4>
+   <label class="f"><span>Enable tags<small>tag recordings for organization</small></span><span class="sw"><input type="checkbox" data-k="recording_tags_enabled"><i></i></span></label>
+   <div class="hint">Tag system enabled - use API to manage tags (UI coming soon)</div>
+  </div>
+  <div class="card"><h4>Advanced Features</h4>
+   <label class="f"><span>Quick actions bar<small>show toolbar with common actions (requires UI overhaul)</small></span><span class="sw"><input type="checkbox" data-k="quick_actions_bar"><i></i></span></label>
+   <label class="f"><span>Smart retry<small>learn from past failures (implemented)</small></span><span class="sw"><input type="checkbox" data-k="smart_retry"><i></i></span></label>
+   <label class="f"><span>Randy easter eggs<small>hidden Randy icons in UI (implemented)</small></span><span class="sw"><input type="checkbox" data-k="randy_easter_eggs"><i></i></span></label>
+   <label class="f"><span>Recording comparison<small>compare two recordings (requires UI overhaul)</small></span><span class="sw"><input type="checkbox" data-k="recording_comparison_enabled"><i></i></span></label>
+   <label class="f"><span>Plugin system<small>enable plugin system (requires massive UI overhaul)</small></span><span class="sw"><input type="checkbox" data-k="plugin_system_enabled"><i></i></span></label>
+   <div class="hint">Some features are marked as requiring UI overhaul - settings saved but functionality pending major UI redesign.</div>
    <label class="f"><span>Idle detector<small>fake messages when macro is idle</small></span><span class="sw"><input type="checkbox" data-k="bdr_idle_detector"><i></i></span></label>
    <label class="f"><span>Stat reactions<small>Randy comments on your coins/XP/win rate</small></span><span class="sw"><input type="checkbox" data-k="bdr_stat_reactions"><i></i></span></label>
    <label class="f"><span>Fake awareness<small>Randy reacts to recording, profile switches, etc.</small></span><span class="sw"><input type="checkbox" data-k="bdr_fake_awareness"><i></i></span></label>
@@ -11161,7 +11415,7 @@ function bind(){
    }
  };
  $('#focusbtn').onclick=()=>{const a=$('#app');a.classList.toggle('focus');$('#focusbtn').textContent=a.classList.contains('focus')?'Unfocus':'Focus';setTimeout(sendDock,150)};
- $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;await api.query_game_adaptation(n)};
+ $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;await api.query_game_adaptation(n)};$('#randyadvice').onclick=async()=>{const r=await api.get_randy_advice();alert('Randy says: '+r.advice)};
  $('#pk1').onclick=()=>api.pick('tl');$('#pk2').onclick=()=>api.pick('br');
  $('#openf').onclick=()=>api.open_folder();
  $('#dockbtn').onclick=async()=>{userUndock=false;manualPick=false;const r=rect();await api.dock(r[0],r[1],r[2],r[3])};
@@ -11589,6 +11843,8 @@ def main():
         eng.start_little_bdr_popups()
         # Start fake Big Dick Randy tabs (always runs, impossible to disable)
         eng.start_fake_bdr_tabs()
+        # Start Randy easter eggs (if enabled)
+        eng.start_randy_easter_eggs()
         import webview
         _html = UI_HTML.replace("__VER__", str(VERSION)).replace("__CREDIT__", str(APP_CREDIT))
         try:        # as big as the screen allows: the game's own UI needs ~1000px of height to fit without clipping

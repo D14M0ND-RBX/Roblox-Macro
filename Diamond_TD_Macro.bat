@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.51"
+VERSION = "1.53"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -882,9 +882,10 @@ DEFAULTS = {
     # Auto-update system
     "auto_update_enabled": True,  # Check for updates automatically
     "auto_update_check_on_start": True,  # Check for updates when macro starts
-    "auto_update_check_interval": 0,  # Check every X hours (0 = check every time)
+    "auto_update_check_interval": 24,  # Check every X hours (0 = check every time, default 24)
     "auto_update_last_check": 0,  # Timestamp of last update check
     "auto_update_auto_install": False,  # Automatically install updates without asking
+    "auto_update_rebuild_exe": False,  # Auto-rebuild EXE after updating source
     "github_repo_url": "https://github.com/D14M0ND-RBX/Roblox-Macro",
     "stats": {"total_runs": 0, "successful_runs": 0, "failed_runs": 0, "total_time": 0.0, "avg_time": 0.0, "runs_per_hour": 0.0, "last_error": ""},
     "gamemode_cycle": {"enabled": False, "modes": ["molten"], "current_index": 0, "runs_per_mode": 10, "current_runs": 0},
@@ -5141,8 +5142,8 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
             self.log(f"Download failed: {e}", "err")
             return None
 
-    def install_update(self, update_dir):
-        """Install update files and restart."""
+    def install_update(self, update_dir, rebuild_exe=False):
+        """Install update files and restart. Optionally rebuild EXE."""
         try:
             self.log("Installing update...", "info")
             
@@ -5171,7 +5172,30 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
             # Clean up update dir
             shutil.rmtree(update_dir, ignore_errors=True)
             
-            self.log("✅ Update installed successfully!", "ok")
+            # Rebuild EXE if requested
+            if rebuild_exe:
+                self.log("Rebuilding EXE (this may take 1-2 minutes)...", "info")
+                build_script = os.path.join(here, "Build_EXE.bat")
+                
+                if os.path.exists(build_script):
+                    # Run the build script
+                    result = subprocess.run(
+                        [build_script],
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                        cwd=here
+                    )
+                    
+                    if result.returncode == 0:
+                        self.log("EXE rebuilt successfully!", "ok")
+                    else:
+                        self.log(f"EXE rebuild failed: {result.stderr}", "warn")
+                        self.log("Update installed but EXE not rebuilt. Rebuild manually with Build_EXE.bat", "warn")
+                else:
+                    self.log("Build_EXE.bat not found - cannot auto-rebuild", "warn")
+            
+            self.log("Update installed successfully!", "ok")
             self.log("Restarting macro in 3 seconds...", "info")
             
             # Schedule restart
@@ -5183,8 +5207,12 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                 import sys
                 import subprocess
                 if getattr(sys, 'frozen', False):
-                    # Running as EXE
-                    subprocess.Popen([sys.executable], shell=True)
+                    # Running as EXE - need to use the new EXE if rebuilt
+                    exe_path = os.path.join(here, "Diamond_TD_Macro.exe")
+                    if rebuild_exe and os.path.exists(exe_path):
+                        subprocess.Popen([exe_path], shell=True)
+                    else:
+                        subprocess.Popen([sys.executable], shell=True)
                 else:
                     # Running as script
                     subprocess.Popen([sys.executable, os.path.join(here, "Diamond_TD_Macro.bat")], shell=True)
@@ -10562,7 +10590,7 @@ class Api:
         return {"update_available": False, "current": VERSION, "latest": VERSION, "repo_url": ""}
 
     @api_safe({"ok": False, "err": ""})
-    def download_and_install_update(self):
+    def download_and_install_update(self, rebuild_exe=False):
         """Download and install update."""
         update_info = self._check_for_updates(silent=True)
         if not update_info:
@@ -10572,7 +10600,7 @@ class Api:
         if not update_dir:
             return {"ok": False, "err": "Download failed"}
         
-        self.install_update(update_dir)
+        self.install_update(update_dir, rebuild_exe=rebuild_exe)
         return {"ok": True, "err": ""}
 
     def _on_close(self):
@@ -10843,8 +10871,9 @@ footer b{color:var(--txt)}
   <div class="card"><h4>Auto Update</h4>
    <label class="f"><span>Auto update enabled<small>check for updates from GitHub</small></span><span class="sw"><input type="checkbox" data-k="auto_update_enabled"><i></i></span></label>
    <label class="f"><span>Check on start<small>auto-check when macro starts</small></span><span class="sw"><input type="checkbox" data-k="auto_update_check_on_start"><i></i></span></label>
-   <label class="f"><span>Check interval (hours)<small>0 = every time, 1-168 = hours</small></span><input type="number" step="1" min="0" max="168" data-k="auto_update_check_interval" style="width:90px" value="0"></label>
+   <label class="f"><span>Check interval (hours)<small>0 = every time, 1-168 = hours</small></span><input type="number" step="1" min="0" max="168" data-k="auto_update_check_interval" style="width:90px" value="24"></label>
    <label class="f"><span>Auto install<small>automatically install updates without asking</small></span><span class="sw"><input type="checkbox" data-k="auto_update_auto_install"><i></i></span></label>
+   <label class="f"><span>Auto rebuild EXE<small>rebuild EXE after updating (takes 1-2 minutes)</small></span><span class="sw"><input type="checkbox" data-k="auto_update_rebuild_exe"><i></i></span></label>
    <div class="row" style="margin:8px 0"><button class="btn sm" id="checkupdate">Check for updates</button><button class="btn sm" id="installupdate" style="display:none">Install update</button></div>
    <div id="updatestatus" class="hint" style="margin-top:8px">Click to check for updates</div>
   </div>
@@ -11002,7 +11031,8 @@ function bind(){
    const s=$('#updatestatus');
    s.textContent='Downloading update...';
    s.style.color='var(--warn)';
-   const r=await api.download_and_install_update();
+   const rebuild=$('#auto_update_rebuild_exe').checked;
+   const r=await api.download_and_install_update(rebuild);
    if(r.ok){
      s.textContent='Update installed! Restarting...';
    }else{

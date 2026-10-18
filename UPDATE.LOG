@@ -459,4 +459,27 @@ v1.51 - Auto Update Enhancement
 - Setting auto_update_check_interval now defaults to 0 instead of 24
 - README updated to reflect "check every time" behavior
 - Version bumped to 1.51
+
+v1.52 - Auto-Rebuild EXE
+- Added auto-rebuild EXE option (auto_update_rebuild_exe setting)
+- When enabled, macro runs Build_EXE.bat after downloading source updates
+- Deletes existing dist/build folders before rebuilding (clean rebuild)
+- Takes 1-2 minutes to rebuild - shows progress in log
+- Rebuild fails gracefully if Build_EXE.bat not found or build fails
+- Update continues even if rebuild fails (source still updated)
+- UI checkbox added to Auto Update settings
+- Changed default check interval back to 24 hours (less annoying)
+- Users can still set to 0 for check-every-time behavior
+- Version bumped to 1.52
+
+v1.53 - Bug Fixes
+- Added wmi to requirements.txt (was used in code but missing from dependencies)
+- Fixed EXE restart logic after rebuild - now launches the newly built EXE
+- Removed emoji characters from log messages (caused encoding issues in some environments)
+- Fixed potential encoding errors in update/rebuild logging
+- Tested Python syntax - no syntax errors found
+- Tested Build_EXE.bat extraction - no syntax errors found
+- Tested all key package dependencies - all available
+- Tested GitHub update check - successfully fetches version from README
+- Version bumped to 1.53
 =============================

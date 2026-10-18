@@ -578,4 +578,14 @@ v1.58 - Rebrand to Diamond-Macro
 - Updated all occurrences of "Diamond TD Macro" to "Diamond-Macro"
 - Cleaner, shorter name without "TD"
 - Version bumped to 1.58
+
+v1.59 - Template Corruption Error Handling
+- Added error handling for corrupted template images
+- Previously, corrupted template images would crash the macro on startup
+- Now loads templates with try/except blocks
+- Skips corrupted images and logs a warning instead of crashing
+- Validates decoded images before adding to TPL_BASE
+- Reports which template failed to load
+- Fixes cv2.imdecode assertion error when buffer is empty
+- Version bumped to 1.59
 =============================

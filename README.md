@@ -1,4 +1,4 @@
-# Diamond-Macro  `v1.58 · Beta`
+# Diamond-Macro  `v1.59 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
@@ -87,8 +87,8 @@ A Windows macro recorder/player for Roblox tower defense.
 - **Detection tips** - Game-specific advice for detecting UI elements
 - **JSON format** - Returns structured data that can be used to auto-configure settings
 - **Auto-query on switch** - Automatically asks Gemini when you switch profiles (optional)
-- **Saves to file** - Advice saved to `%APPDATA%\TDRecorder\game_adaptation_[gamename].json`
-- **Works with any game** - Not just TDS - can adapt to Black Myth Wukong, Elden Ring, etc.
+- **Saves to file** - Advice saved to `%APPDATA%\Diamond-Macro\game_adaptation_[gamename].json`
+- **Works with any game** - Not just Tower Defense Simulator - can adapt to Black Myth Wukong, Elden Ring, etc.
 - **Settings:** gemini_game_adaptation, gemini_game_adaptation_on_profile_switch
 - **Requires:** Gemini API key (same as advisor feature)
 
@@ -98,7 +98,7 @@ A Windows macro recorder/player for Roblox tower defense.
 - **Auto-rebuild EXE** - Option to automatically rebuild EXE after updating source (takes 1-2 minutes)
 - **Auto-restart** - Macro restarts after update installation
 - **Config backup** - Automatically backs up config before updating
-- **Downloads core files** - Updates Diamond_TD_Macro.bat, README.md, UPDATE.LOG, requirements.txt
+- **Downloads core files** - Updates Diamond-Macro.bat, README.md, UPDATE.LOG, requirements.txt
 - **Configurable interval** - Set how often to check (0 = every time, 1-168 hours)
 - **Auto-install option** - Can automatically install without asking (optional)
 - **Safe rollback** - If update fails, keeps working version
@@ -107,7 +107,7 @@ A Windows macro recorder/player for Roblox tower defense.
 
 ### 🔍 Preflight System
 - **Validate before starting** - Checks everything before macro begins
-- **Required images check** - Ensures all 9 TDS images exist
+- **Required images check** - Ensures all 9 Tower Defense Simulator images exist
 - **Profile structure validation** - Verifies active profile is valid and not corrupted
 - **Recording verification** - Confirms selected recording exists (for custom mode)
 - **Roblox window check** - Ensures Roblox is accessible
@@ -168,7 +168,7 @@ A Windows macro recorder/player for Roblox tower defense.
 - **Capture Randy appearances** - Screenshots of Randy's overlay saved
 - **Timestamped files** - `randy_sighting_YYYYMMDD_HHMMSS.png`
 - **Auto-cleanup** - Keeps only last 10 sightings
-- **Save location** - `%APPDATA%\TDRecorder\randy_sightings\`
+- **Save location** - `%APPDATA%\Diamond-Macro\randy_sightings\`
 - **Counter display** - "Total: X" in log
 - **UI toggle** - "Randy sightings" checkbox in Randy settings
 
@@ -187,7 +187,7 @@ A Windows macro recorder/player for Roblox tower defense.
 - **Auto-cleanup** - Keeps backups for 7 days by default (configurable)
 - **Zip format** - Compresses backups to save space
 - **Includes all data** - Config, profiles, and custom images
-- **Backup location** - Saved to `%APPDATA%\TDRecorder\backups\`
+- **Backup location** - Saved to `%APPDATA%\Diamond-Macro\backups\`
 - **Proper shutdown** - Thread stops cleanly when macro closes
 
 ### 💀 Randy Stat Reactions - Enhanced
@@ -413,8 +413,8 @@ A Windows macro recorder/player for Roblox tower defense.
 - **Improved auto-rejoin** — Multi-step recovery system with more detection steps for better reliability after disconnects.
 - **Better statistics** — Runs per hour tracking, success rate calculation, and statistics shown in the FPS overlay.
 - **Quality of life improvements** — Configurable scan intervals, pixel debug mode, auto color learning, and fallback options.
-- **Hybrid Mode** — New mode that runs the TDS intro (map search, ready, etc.) then executes custom steps for the game loop. Best of both worlds!
-- **Gamemode-specific profiles** — Preset profiles for each TDS gamemode (Easy, Casual, Intermediate, Molten, Fallen, Frost) for easy switching.
+- **Hybrid Mode** — New mode that runs the Tower Defense Simulator intro (map search, ready, etc.) then executes custom steps for the game loop. Best of both worlds!
+- **Gamemode-specific profiles** — Preset profiles for each Tower Defense Simulator gamemode (Easy, Casual, Intermediate, Molten, Fallen, Frost) for easy switching.
 - **Auto-gamemode cycling** — Automatically cycle through different gamemodes after a set number of runs. Perfect for variety and testing different modes.
 - **Per-gamemode statistics** — Track coins, XP, runs, and average time separately for each gamemode. See which mode is most profitable.
 - **Profile templates** — Quick-start profiles from presets (Blank, Fast Farm, High Wave, Survival) for common playstyles.
@@ -425,8 +425,8 @@ A Windows macro recorder/player for Roblox tower defense.
 
 | File | What it is |
 |---|---|
-| `Diamond_TD_Macro.bat` | The macro. Double-click to run. First run installs everything it needs. |
-| `Build-Diamond-TD-Macro-Exe.bat` | Optional. Builds `Diamond_TD_Macro.exe` (no command prompt). |
+| `Diamond-Macro.bat` | The macro. Double-click to run. First run installs everything it needs. |
+| `Build-Diamond-Macro-Exe.bat` | Optional. Builds `Diamond_TD_Macro.exe` (no command prompt). |
 | `requirements.txt` | The Python libraries used (the .bat installs them for you). |
 | `images/` | The 8 reference images the macro looks for + the Mahoraga wheel SFX (`maho_wheel.wav`). They are already built into the macro. |
 | `VideoProject-ezgif.com-crop.gif` | The 8-spoke Mahoraga animated wheel used by the adaptation overlay (baked into the .exe when building). |
@@ -500,11 +500,11 @@ If the image steps make it run late, the remaining keys keep their spacing.
 
 **Option A: run the .bat**
 1. Extract the zip anywhere.
-2. Double-click `Diamond_TD_Macro.bat`. The first run installs Python 3.12 (if missing), the WebView2 runtime (if missing) and the libraries. This can take a few minutes.
+2. Double-click `Diamond-Macro.bat`. The first run installs Python 3.12 (if missing), the WebView2 runtime (if missing) and the libraries. This can take a few minutes.
 
 **Option B: make an .exe**
-1. Keep `Build-Diamond-TD-Macro-Exe.bat` in the **same folder** as `Diamond_TD_Macro.bat`.
-2. Double-click it. It builds `Diamond_TD_Macro.exe` next to it (a few minutes).
+1. Keep `Build-Diamond-Macro-Exe.bat` in the **same folder** as `Diamond-Macro.bat`.
+2. Double-click it. It builds `Diamond-Macro.exe` next to it (a few minutes).
 3. Open the exe, then right-click its taskbar icon and choose **Pin to taskbar**.
 
 ---
@@ -575,7 +575,7 @@ Settings save automatically and are range-checked, so a typo can't break a run.
 
 ### Gamemode Cycling Settings
 
-When enabled, the macro automatically cycles through different TDS gamemodes to add variety or test different modes.
+When enabled, the macro automatically cycles through different Tower Defense Simulator gamemodes to add variety or test different modes.
 
 || Setting | What it does |
 ||---|---|
@@ -591,7 +591,7 @@ Configure how the macro handles disconnects and game crashes.
 
 ||| Setting | What it does |
 |||---|---|
-||| **Custom rejoin link** | Paste a Roblox game URL to rejoin a different game after disconnects (e.g., for private servers or other games). When set, the macro closes Roblox and relaunches with this link instead of following the standard TDS recovery path. |
+||| **Custom rejoin link** | Paste a Roblox game URL to rejoin a different game after disconnects (e.g., for private servers or other games). When set, the macro closes Roblox and relaunches with this link instead of following the standard Tower Defense Simulator recovery path. |
 ||| **Custom rejoin steps** | JSON array of steps to run after rejoining (advanced). Uses the same format as Game tab steps. Useful for games that require specific setup after rejoining. Example: `[{"type":"wait","duration":5},{"type":"key_press","key":"e","count":1,"hold":0.1}]` |
 
 ### Big Dick Randy Settings
@@ -677,7 +677,7 @@ The macro tracks detailed run statistics:
 
 ### Per-Gamemode Statistics
 
-When using TDS mode with auto-gamemode cycling (or just switching gamemodes manually), the macro tracks statistics separately for each gamemode:
+When using Tower Defense Simulator mode with auto-gamemode cycling (or just switching gamemodes manually), the macro tracks statistics separately for each gamemode:
 
 - **Runs per gamemode** — How many runs completed in each mode
 - **Coins per gamemode** — Total coins earned in each mode
@@ -686,7 +686,7 @@ When using TDS mode with auto-gamemode cycling (or just switching gamemodes manu
 
 This helps you identify which gamemode is most profitable or efficient. Statistics are shown in the Record tab's Statistics panel.
 
-Statistics are saved in `%APPDATA%\TDRecorder\config.json` and persist across sessions. They also appear in the FPS overlay when enabled.
+Statistics are saved in `%APPDATA%\Diamond-Macro\config.json` and persist across sessions. They also appear in the FPS overlay when enabled.
 
 ---
 
@@ -738,7 +738,7 @@ Images were captured on a 3440x1440 screen. Other sizes are scaled using the Res
 
 ## Where files are saved
 
-`%APPDATA%\TDRecorder`
+`%APPDATA%\Diamond-Macro`
 
 | File | Contents |
 |---|---|
@@ -754,7 +754,7 @@ Images were captured on a 3440x1440 screen. Other sizes are scaled using the Res
 
 ## Diagnostics
 
-Run `Diamond_TD_Macro.bat --diagnose` (or `Diamond_TD_Macro.exe --diagnose`) to check Windows/Python versions, screen size, libraries, WebView2, Windows OCR and whether Roblox is found. **Test scan** also reports Roblox and OCR status.
+Run `Diamond-Macro.bat --diagnose` (or `Diamond_TD_Macro.exe --diagnose`) to check Windows/Python versions, screen size, libraries, WebView2, Windows OCR and whether Roblox is found. **Test scan** also reports Roblox and OCR status.
 
 ---
 
@@ -764,7 +764,7 @@ The ROBLOX tab is a full Roblox launcher built into the macro window. Open it wi
 
 ### Account
 
-Paste your `.ROBLOSECURITY` cookie into the cookie field and press **Sign in**. The cookie is validated against the Roblox API, stored encrypted with Windows DPAPI in `%APPDATA%\TDRecorder\rbx_session.dat`, and never written to any log file. Only your Windows user account on this PC can read it.
+Paste your `.ROBLOSECURITY` cookie into the cookie field and press **Sign in**. The cookie is validated against the Roblox API, stored encrypted with Windows DPAPI in `%APPDATA%\Diamond-Macro\rbx_session.dat`, and never written to any log file. Only your Windows user account on this PC can read it.
 
 **To get the cookie:** open Roblox in your browser, open DevTools (F12), go to Application → Cookies → `.ROBLOSECURITY`, and copy the value.
 
@@ -776,7 +776,7 @@ A green dot in the dock bar lights up when Roblox is running on your PC, whether
 
 ### Launch
 
-- **Launch Roblox (TDS)**: opens Tower Defense Simulator directly using your saved session. No browser required. Same method as Bloxstrap. Roblox auto-docks into the middle panel ~5 s after launch (if Auto-dock is on).
+- **Launch Roblox (Tower Defense Simulator)**: opens Tower Defense Simulator directly using your saved session. No browser required. Same method as Bloxstrap. Roblox auto-docks into the middle panel ~5 s after launch (if Auto-dock is on).
 - **Join by link**: paste a `roblox.com/games/...` URL, a share link (`/share?type=Server&...`), a private-server link (`?privateServerLinkCode=...`), or a job link, then press **Join** or hit Enter. All formats are parsed automatically.
 - The join input remembers your **last 5 links** — click the field to pick from the dropdown.
 
@@ -793,7 +793,7 @@ Writes a set of Roblox fast-flags to `ClientAppSettings.json` in the current Rob
 
 ### FPS Tracker
 
-Shows the real frames-per-second of every running Roblox client. Uses Intel PresentMon (downloaded once to `%APPDATA%\TDRecorder\tools`). PresentMon needs ETW tracing rights, so a Windows UAC prompt appears when you press **Start tracker**.
+Shows the real frames-per-second of every running Roblox client. Uses Intel PresentMon (downloaded once to `%APPDATA%\Diamond-Macro\tools`). PresentMon needs ETW tracing rights, so a Windows UAC prompt appears when you press **Start tracker**.
 
 - If the prompt is always declined, use **Restart as admin** in the Account card (or right-click the macro icon, Run as administrator) and try again.
 - If the macro is already running as administrator, no prompt appears.
@@ -825,13 +825,13 @@ The macro includes an enhanced **auto-rejoin system** that recovers from disconn
 - Falls back to pixel detection for key buttons (Ready, Play Again) when configured
 - If recovery fails, the macro can close Roblox with Alt+F4 and relaunch it
 - Watchers are automatically restarted after successful recovery
-- Works with both TDS mode and custom profiles
+- Works with both Tower Defense Simulator mode and custom profiles
 
 The recovery system is more robust than earlier versions, with additional detection steps and fallback options to handle various Roblox UI states.
 
 ### Custom Rejoin Link
 
-For games other than TDS, you can configure a **custom rejoin link**:
+For games other than Tower Defense Simulator, you can configure a **custom rejoin link**:
 
 - Paste any Roblox game URL (e.g., `https://www.roblox.com/games/1234567890/Your-Game`)
 - When a disconnect occurs, the macro will:
@@ -842,7 +842,7 @@ For games other than TDS, you can configure a **custom rejoin link**:
   5. Run any custom rejoin steps (if configured)
   6. Resume the macro
 
-This is perfect for private servers, custom games, or any game where the standard TDS recovery path doesn't apply.
+This is perfect for private servers, custom games, or any game where the standard Tower Defense Simulator recovery path doesn't apply.
 
 ### Custom Rejoin Steps
 
@@ -865,22 +865,22 @@ The **Game** tab (fifth tab on the right panel) turns the macro into a universal
 A **profile** stores everything for one game: the step sequence, image library, attack-rotation keys, and click spots. The dropdown at the top of the Game tab switches between them.
 
 - **+ New** — create a blank profile and give it a name.
-- **Delete** — removes the profile and all its images. The TDS profile cannot be deleted.
-- **Save profile** — saves the name and TDS mode toggle for the selected profile.
+- **Delete** — removes the profile and all its images. The Tower Defense Simulator profile cannot be deleted.
+- **Save profile** — saves the name and Tower Defense Simulator mode toggle for the selected profile.
 
-### TDS mode toggle
+### Tower Defense Simulator mode toggle
 
-- **On (default for TDS):** the macro uses the built-in TDS intro and Play Again logic exactly as before. The step builder is hidden.
-- **Off:** the macro runs your custom step sequence instead of the TDS logic. The step builder appears.
+- **On (default for Tower Defense Simulator):** the macro uses the built-in Tower Defense Simulator intro and Play Again logic exactly as before. The step builder is hidden.
+- **Off:** the macro runs your custom step sequence instead of the Tower Defense Simulator logic. The step builder appears.
 
 ### Hybrid mode toggle
 
-- **On:** The macro runs the TDS intro (map search, ready, camera align) then executes your custom steps for the game loop. Perfect for using TDS lobby automation with custom tower placement or ability timing.
-- **Off:** Standard TDS or custom mode behavior based on the TDS mode toggle.
+- **On:** The macro runs the Tower Defense Simulator intro (map search, ready, camera align) then executes your custom steps for the game loop. Perfect for using Tower Defense Simulator lobby automation with custom tower placement or ability timing.
+- **Off:** Standard Tower Defense Simulator or custom mode behavior based on the Tower Defense Simulator mode toggle.
 
-**Use case:** You want the reliable TDS lobby automation but need custom tower placement or ability rotation for the actual game.
+**Use case:** You want the reliable Tower Defense Simulator lobby automation but need custom tower placement or ability rotation for the actual game.
 
-### Step sequence (non-TDS)
+### Step sequence (non-Tower Defense Simulator)
 
 Build your automation loop one step at a time. The macro reads the list top-to-bottom and repeats. Add a step by picking a type from the dropdown and pressing **+ Add step**. Reorder with the up/down arrows. Delete with the **×** button. Changes save automatically.
 
@@ -898,7 +898,7 @@ Build your automation loop one step at a time. The macro reads the list top-to-b
 | **Start recording** | Begin recording inputs mid-sequence |
 | **Stop recording** | End the recording |
 | **Type text** | Type a string one character at a time |
-| **Run TDS intro** | Run the built-in TDS lobby intro sequence |
+| **Run Tower Defense Simulator intro** | Run the built-in Tower Defense Simulator lobby intro sequence |
 
 Example sequence for a non-TD game:
 1. Wait 7 seconds
@@ -931,7 +931,7 @@ To use a template:
 
 1. Press **Snip screenshot** — the screen dims and a crosshair appears. Drag a box around any button, icon, or on-screen element you want the macro to recognise. Right-click or Escape to cancel.
 2. Type a name in the **Name** field (e.g. `play_again`, `ready_button`).
-3. Press **Save** — the image is stored in `%APPDATA%\TDRecorder\profiles\<id>\images\`.
+3. Press **Save** — the image is stored in `%APPDATA%\Diamond-Macro\profiles\<id>\images\`.
 4. A thumbnail appears in the library grid. Press **×** to delete any image.
 
 Images are per-profile. Switching profiles shows only that profile's images.

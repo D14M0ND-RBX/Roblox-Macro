@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.58"
+VERSION = "1.59"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -2051,8 +2051,15 @@ def _images_dir():
 def load_templates():
     global TPL_BASE
     for k, b in TEMPLATES.items():
-        arr = np.frombuffer(base64.b64decode(b), dtype=np.uint8)
-        TPL_BASE[k] = cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
+        try:
+            arr = np.frombuffer(base64.b64decode(b), dtype=np.uint8)
+            img = cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
+            if img is not None and img.size:
+                TPL_BASE[k] = img
+            else:
+                file_log(f"WARNING: Template '{k}' could not be decoded (corrupted or invalid)", "warn")
+        except Exception as e:
+            file_log(f"WARNING: Failed to load template '{k}': {e}", "warn")
     # Also load any PNGs from the images/ folder (filename without extension = template key)
     # e.g. images/leave_btn.png becomes TPL_BASE["leave_btn"]
     d = _images_dir()

@@ -644,3 +644,14 @@ v1.66 - Rename to Diamond-Macro.bat
 - Updated .gitignore to track old filename
 - Version bumped to 1.66
 =============================
+
+v1.67 - Code Organization Improvements
+- Added section headers throughout the code for better readability
+- Organized constants into logical groups (Config, Colors, Timing, Detection, Roblox)
+- Added header for utility functions section
+- Added header for API class section
+- Added header for main Engine class section
+- Added header for recording key bindings section
+- Code is now easier to navigate and understand
+- Version bumped to 1.67
+=============================

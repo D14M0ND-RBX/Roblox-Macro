@@ -655,8 +655,12 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 
+# ==============================================================================
+# CONFIGURATION & CONSTANTS
+# ==============================================================================
+
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.66"
+VERSION = "1.67"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -667,13 +671,21 @@ LOG_PATH = os.path.join(DATA_DIR, "td_macro.log")
 IMG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 REF_HEIGHT = 1440.0          # the templates were captured on a 1440p screen
 SCAN_INTERVAL = 0.05         # how often the screen watchers look for images (s)
-# ---- Map selection + veto: a straight port of Ultimate Macro's flow (Main.ahk, override-map menu) ----
+
+# ----------------------------------------------------------------------
+# PIXEL COLORS FOR DETECTION
+# ----------------------------------------------------------------------
+# Map selection + veto: a straight port of Ultimate Macro's flow
 PX_VETO = (0x76, 0x30, 0x10)    # RGB of the red "Map is already in the current rotation!" message = veto (actual: 118, 48, 16)
 PX_LIME = (40, 220, 60)        # RGB of lime green for RESTART, READY, PLAY AGAIN buttons (actual Roblox button color)
 PX_SEARCH = (255, 255, 255)    # RGB of white for search bar (can be customized)
 PX_MAP = (40, 220, 60)         # RGB of lime green for map/ready button (can be customized)
 PX_READY = (40, 220, 60)       # RGB of lime green for ready button (can be customized)
 PX_VETO_BTN = (200, 50, 50)    # RGB of red for veto button (can be customized)
+
+# ----------------------------------------------------------------------
+# MAP SELECTION TIMING
+# ----------------------------------------------------------------------
 # Auto-learned colors (saved per profile)
 _LEARNED_COLORS = {}
 MAP_PX_WAIT = 3.0               # s to watch the red veto pixel after each map click
@@ -684,6 +696,10 @@ MAP_MENU_CLICK = 0.5             # s after the map click before looking (Ultimat
 MAP_TRIES = 5                    # map clicks before giving up (Ultimate: 5)
 MAP_HOLD_E = 0.76                # s E is held after the Veto click to reopen the menu (Ultimate: 760 ms)
 VETO_FALLBACK_FRAC = (0.666, 0.756)   # Veto button centre in a 1376x860 window (measured from a real screenshot) - used when no image matches
+
+# ----------------------------------------------------------------------
+# IMAGE DETECTION SETTINGS
+# ----------------------------------------------------------------------
 PA_COOLDOWN = 3.0            # after clicking Play Again, ignore it for this long (s)
 COARSE_GATE = 0.55          # half-size fast-pass score threshold (from Calamity) - anything below this is skipped early
 TPL_SCALES = (1.0, 0.95, 1.05, 0.90, 1.10, 0.85, 1.15)   # UI scale variants tried per template (resolution robustness)
@@ -693,16 +709,24 @@ TPL_EXTRA_SCALES = {"play_again": _PA_SWEEP, "restart": _PA_SWEEP}
 WATCHDOG_MULT = 2.5         # if a phase runs WATCHDOG_MULT * step_timeout the macro auto-recovers
 DC_INTERVAL = 1.00          # disconnect-watcher scan interval (s) - image 1 (Leave popup) every 1s 24/7
 PA_READY_TIMEOUT = 300         # 5 minutes after Play Again click: if Ready still not seen, ALT+F4 kill + rejoin
+
+# ----------------------------------------------------------------------
+# ROBLOX GAME SETTINGS
+# ----------------------------------------------------------------------
 ROBLOX_GAME_ID = 3260590327   # Tower Defense Simulator
 GAMEMODES = ("easy", "casual", "intermediate", "molten", "fallen", "frost")
 
 # ----------------------------------------------------------------------
-#  Intro key sequence:  (key, start time in s, hold time in s)
+# INTRO KEY SEQUENCE
 # ----------------------------------------------------------------------
+# Intro key sequence: (key, start time in s, hold time in s)
 KEYS_A = [("s", 0.31, 1.97), ("a", 2.75, 2.55)]
 KEYS_B = [("d", 8.99, 1.37), ("s", 11.03, 1.70), ("d", 13.39, 4.14),
           ("a", 18.19, 0.45), ("e", 21.44, 0.49)]
 
+# ----------------------------------------------------------------------
+# DEFAULT CONFIGURATION
+# ----------------------------------------------------------------------
 DEFAULTS = {
     "loops_mode": "inf", "loops": 0,
     "full_screen": True, "zone": {"x1": 0, "y1": 0, "x2": 3439, "y2": 1439},
@@ -1000,6 +1024,10 @@ def setup_logging():
     except Exception:
         _file_log.addHandler(logging.NullHandler())
 
+
+# ==============================================================================
+# UTILITY FUNCTIONS
+# ==============================================================================
 
 def file_log(msg, kind="info"):
     try:
@@ -2418,6 +2446,10 @@ def sanitize_cfg(c):
         fix(k, v)
     return fixed
 
+# ==============================================================================
+# API SAFE DECORATOR
+# ==============================================================================
+# Wrap a method the web view calls: log the failure instead of raising into JavaScript
 
 def api_safe(default=False):
     """Wrap a method the web view calls: log the failure instead of raising into JavaScript."""
@@ -2436,9 +2468,16 @@ def api_safe(default=False):
         return wrapper
     return deco
 
+# ==============================================================================
+# RECORDING KEY BINDINGS
+# ==============================================================================
 
 REC_KEYS = [(k, v) for k, v in VK.items()]
 
+# ==============================================================================
+# MAIN ENGINE CLASS
+# ==============================================================================
+# Core macro engine handling recording, playback, automation, and UI integration
 
 class Engine:
     def __init__(self):
@@ -10497,6 +10536,11 @@ class RbxHub:
 # ----------------------------------------------------------------------
 #  JS <-> Python bridge
 # ----------------------------------------------------------------------
+# ==============================================================================
+# API CLASS - JavaScript Interface
+# ==============================================================================
+# Methods exposed to the web UI via pywebview
+
 class Api:
     def __init__(self, eng):
         self._e = eng

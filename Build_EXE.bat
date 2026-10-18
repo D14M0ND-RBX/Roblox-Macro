@@ -4,7 +4,7 @@ r"""
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title Build Diamond TD Macro
+title Build Diamond-Macro
 rem Put this file in the SAME folder as Diamond_TD_Macro.bat, then double-click it.
 rem It installs everything it needs (Python, PyInstaller, pywebview, OpenCV, WebView2) by itself.
 rem GitHub auto-push enabled
@@ -94,10 +94,10 @@ def main():
     with open(SRC, "r", encoding="utf-8") as f:
         raw = f.read()
     code = extract_python(raw)
-    name = "Diamond_TD_Macro"  # exe name
+    name = "Diamond-Macro"  # exe name
     shutil.rmtree(WORK, ignore_errors=True)
     os.makedirs(WORK)
-    py_file = os.path.join(WORK, "Diamond_TD_Macro.py")
+    py_file = os.path.join(WORK, "Diamond-Macro.py")
     with open(py_file, "w", encoding="utf-8", newline="\n") as f:
         f.write(code)
     if "--extract-only" in sys.argv:

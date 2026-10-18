@@ -1,4 +1,4 @@
-# Diamond TD Macro  `v1.57 · Beta`
+# Diamond-Macro  `v1.58 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
@@ -512,7 +512,7 @@ If the image steps make it run late, the remaining keys keep their spacing.
 ## First-time setup
 
 1. Open Roblox in a window and join the lobby of your tower defense.
-2. Open Diamond TD Macro. Roblox is pulled into the middle panel automatically (or press **Dock Roblox**).
+2. Open Diamond-Macro. Roblox is pulled into the middle panel automatically (or press **Dock Roblox**).
 3. Open **Settings** and set:
    - **Map**: the name typed into the map search bar (default `Dead Ahead`).
    - **Resolution**: if Roblox is fullscreen, pick your screen resolution. Otherwise leave it on Auto-detect.

@@ -1,6 +1,7 @@
 # Ignore push script (user's personal workflow)
 push_to_github.bat
 Diamond_TD_Macro.exe
+Diamond-Macro.exe
 _diamond_build/
 
 # Ignore Python cache

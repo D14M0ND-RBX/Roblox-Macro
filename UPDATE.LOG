@@ -567,4 +567,15 @@ v1.57 - Future Feature Settings
 - Added hint explaining features requiring UI overhaul
 - All settings saved and ready for future implementation
 - Version bumped to 1.57
+
+v1.58 - Rebrand to Diamond-Macro
+- Changed name from "Diamond TD Macro" to "Diamond-Macro"
+- Updated APP_TITLE variable
+- Updated window title in HTML
+- Updated build script (Build_EXE.bat)
+- Updated EXE output name to Diamond-Macro.exe
+- Updated README.md branding
+- Updated all occurrences of "Diamond TD Macro" to "Diamond-Macro"
+- Cleaner, shorter name without "TD"
+- Version bumped to 1.58
 =============================

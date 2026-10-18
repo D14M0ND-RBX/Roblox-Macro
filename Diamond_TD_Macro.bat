@@ -4,7 +4,7 @@ r"""
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title Diamond TD Macro - Setup
+title Diamond-Macro - Setup
 rem Double-click this file. First run installs everything it needs by itself.
 set "PYEXE="
 set "ERROR_LOG=%TEMP%\tdmacro_setup_errors.txt"
@@ -650,8 +650,8 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 
-APP_TITLE = "Diamond TD Macro"
-VERSION = "1.57"
+APP_TITLE = "Diamond-Macro"
+VERSION = "1.58"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -3245,7 +3245,7 @@ class Engine:
             
             # Create gist data
             gist_data = {
-                "description": "Diamond TD Macro Profile: %s" % profile.get("name", profile_id),
+                "description": "Diamond-Macro Profile: %s" % profile.get("name", profile_id),
                 "public": True,
                 "files": {
                     "%s.json" % profile_id: {
@@ -3899,7 +3899,7 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             
             data = {
                 "content": message,
-                "username": "Diamond TD Macro"
+                "username": "Diamond-Macro"
             }
             
             if include_screenshot and bool(self.cfg.get("discord_screenshots", False)):
@@ -10955,7 +10955,7 @@ class Api:
 # ----------------------------------------------------------------------
 #  The window
 # ----------------------------------------------------------------------
-UI_HTML = r'''<!doctype html><html><head><meta charset="utf-8"><title>Diamond TD Macro</title>
+UI_HTML = r'''<!doctype html><html><head><meta charset="utf-8"><title>Diamond-Macro</title>
 <style>:root{--bg:#0c0d0f;--s1:#131417;--s2:#1a1c20;--s3:#23262b;--line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);--txt:#ececf0;--mut:#8b8f99;--dim:#585c66;--acc:#5eead4;--ink:#04201b;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:13px 'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-font-smoothing:antialiased}
@@ -11067,7 +11067,7 @@ footer .l,footer .r{display:flex;align-items:center;gap:12px}
 footer b{color:var(--txt)}
 </style></head><body><div id="app">
 <header>
- <div class="brand"><svg viewBox="0 0 24 24"><path d="M12 2.5 21 9.5 12 21.5 3 9.5Z" fill="#5eead4"/><path d="M3 9.5h18M8 9.5 12 2.5 16 9.5 12 21.5Z" fill="none" stroke="#0c0d0f" stroke-width="1.1" stroke-linejoin="round" opacity=".55"/></svg><div class="n">Diamond<span>TD Macro</span></div></div>
+ <div class="brand"><svg viewBox="0 0 24 24"><path d="M12 2.5 21 9.5 12 21.5 3 9.5Z" fill="#5eead4"/><path d="M3 9.5h18M8 9.5 12 2.5 16 9.5 12 21.5Z" fill="none" stroke="#0c0d0f" stroke-width="1.1" stroke-linejoin="round" opacity=".55"/></svg><div class="n">Diamond<span>-Macro</span></div></div>
  <div class="hr"><div class="hi">Hi, <b id="user">player</b></div><div class="pill" id="pill"><span class="dot"></span><span id="pilltxt">Idle</span></div><button class="btn go" id="startbtn">Start macro</button></div>
 </header>
 <main>

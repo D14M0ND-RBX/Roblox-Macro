@@ -130,7 +130,12 @@ for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do call :try_python "%
 for /d %%D in ("%ProgramFiles%\Python3*") do call :try_python "%%D\python.exe"
 exit /b 0
 """
-#   TD RECORDER  -  record a Roblox tower-defense run once, replay it forever
+# ==============================================================================
+# DIAMOND-MACRO - Universal Roblox Tower Defense Macro
+# ==============================================================================
+# A Windows macro recorder/player for Roblox tower defense games.
+# Record once, replay forever. Handles lobby intro, replay, Play Again clicks.
+# ==============================================================================
 #   (this file is both a .bat launcher and the program - see top of file)
 import os, sys, re, json, time, base64, threading, ctypes, subprocess, struct, zlib, traceback, datetime, math, zipfile
 import atexit, functools, logging, platform
@@ -651,7 +656,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.65"
+VERSION = "1.66"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))

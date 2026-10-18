@@ -5,11 +5,11 @@ r"""
 setlocal EnableExtensions
 cd /d "%~dp0"
 title Build Diamond-Macro
-rem Put this file in the SAME folder as Diamond_TD_Macro.bat, then double-click it.
+rem Put this file in the SAME folder as Diamond-Macro.bat, then double-click it.
 rem It installs everything it needs (Python, PyInstaller, pywebview, OpenCV, WebView2) by itself.
 rem GitHub auto-push enabled
-if not exist "%~dp0Diamond_TD_Macro.bat" (
-    echo [ERROR] Diamond_TD_Macro.bat was not found next to this file.
+if not exist "%~dp0Diamond-Macro.bat" (
+    echo [ERROR] Diamond-Macro.bat was not found next to this file.
     pause
     exit /b 1
 )
@@ -70,7 +70,7 @@ exit /b 0
 import os, re, sys, shutil, subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SRC = os.path.join(HERE, "Diamond_TD_Macro.bat")
+SRC = os.path.join(HERE, "Diamond-Macro.bat")
 WORK = os.path.join(HERE, "_diamond_build")
 
 

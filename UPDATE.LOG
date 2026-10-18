@@ -636,3 +636,11 @@ v1.65 - Fix Test Buttons Not Working
 - Fixed query_gemini_game_adaptation to return text when JSON parsing fails
 - Version bumped to 1.65
 =============================
+
+v1.66 - Rename to Diamond-Macro.bat
+- Renamed Diamond_TD_Macro.bat to Diamond-Macro.bat
+- Updated Build_EXE.bat to reference new filename
+- Updated README.md references to new filename
+- Updated .gitignore to track old filename
+- Version bumped to 1.66
+=============================

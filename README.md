@@ -1,4 +1,4 @@
-# Diamond-Macro  `v1.65 · Beta`
+# Diamond-Macro  `v1.66 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
@@ -426,7 +426,7 @@ A Windows macro recorder/player for Roblox tower defense.
 | File | What it is |
 |---|---|
 | `Diamond-Macro.bat` | The macro. Double-click to run. First run installs everything it needs. |
-| `Build-Diamond-Macro-Exe.bat` | Optional. Builds `Diamond_TD_Macro.exe` (no command prompt). |
+| `Build-Diamond-Macro-Exe.bat` | Optional. Builds `Diamond-Macro.exe` (no command prompt). |
 | `requirements.txt` | The Python libraries used (the .bat installs them for you). |
 | `images/` | The 8 reference images the macro looks for + the Mahoraga wheel SFX (`maho_wheel.wav`). They are already built into the macro. |
 | `VideoProject-ezgif.com-crop.gif` | The 8-spoke Mahoraga animated wheel used by the adaptation overlay (baked into the .exe when building). |
@@ -754,7 +754,7 @@ Images were captured on a 3440x1440 screen. Other sizes are scaled using the Res
 
 ## Diagnostics
 
-Run `Diamond-Macro.bat --diagnose` (or `Diamond_TD_Macro.exe --diagnose`) to check Windows/Python versions, screen size, libraries, WebView2, Windows OCR and whether Roblox is found. **Test scan** also reports Roblox and OCR status.
+Run `Diamond-Macro.bat --diagnose` (or `Diamond-Macro.exe --diagnose`) to check Windows/Python versions, screen size, libraries, WebView2, Windows OCR and whether Roblox is found. **Test scan** also reports Roblox and OCR status.
 
 ---
 

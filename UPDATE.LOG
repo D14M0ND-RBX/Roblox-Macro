@@ -655,3 +655,12 @@ v1.67 - Code Organization Improvements
 - Code is now easier to navigate and understand
 - Version bumped to 1.67
 =============================
+
+v1.68 - Add Get API Key Button
+- Added "Get free API key" button in Gemini Game Adaptation settings
+- Button opens Google AI Studio in a new tab
+- User can create their API key easily
+- Added API key input field with password masking
+- Made it easier for users to get and set up Gemini API key
+- Version bumped to 1.68
+=============================

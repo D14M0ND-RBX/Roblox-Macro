@@ -627,3 +627,12 @@ v1.64 - Fix Ability Spam Causing 12345 Key Spam
 - Ability spam must now be explicitly enabled in settings
 - Version bumped to 1.64
 =============================
+
+v1.65 - Fix Test Buttons Not Working
+- Added maho_test method to Api class (was only in Engine)
+- Added query_game_adaptation method to Api class (was only in Engine)
+- Updated JavaScript to handle the new return format from query_game_adaptation
+- Fixed game adaptation button to show success/error alerts
+- Fixed query_gemini_game_adaptation to return text when JSON parsing fails
+- Version bumped to 1.65
+=============================

@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.64"
+VERSION = "1.65"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -3836,7 +3836,8 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             with open(adaptation_file, "w", encoding="utf-8") as f:
                 f.write(advice_text)
             
-            return None
+            self.log("Game adaptation saved as text (JSON parsing failed)", "warn")
+            return advice_text
             
         except ImportError:
             self.log("Gemini game adaptation requires google-generativeai. Run: pip install google-generativeai", "warn")
@@ -10691,6 +10692,19 @@ class Api:
         """Generate terrible Randy advice."""
         return self._e.generate_randy_advice()
 
+    @api_safe(False)
+    def maho_test(self):
+        """Test Mahoraga overlay."""
+        return self._e.maho_test()
+
+    @api_safe({"ok": False, "err": "", "adaptation": None})
+    def query_game_adaptation(self, game_name):
+        """Manually query Gemini for game adaptation advice."""
+        adaptation = self._e.query_gemini_game_adaptation(game_name)
+        if adaptation:
+            return {"ok": True, "err": "", "adaptation": adaptation}
+        return {"ok": False, "err": "Failed to get adaptation advice (check Gemini API key and settings)", "adaptation": None}
+
     # ---- ROBLOX tab API ----
     @api_safe({"ok": False, "name": "", "err": ""})
     def rbx_set_cookie(self, cookie):
@@ -10826,14 +10840,6 @@ class Api:
         
         return True
 
-    @api_safe({"ok": False, "err": ""})
-    def query_game_adaptation(self, game_name):
-        """Manually query Gemini for game adaptation advice."""
-        adaptation = self.query_gemini_game_adaptation(game_name)
-        if adaptation:
-            return {"ok": True, "err": ""}
-        return {"ok": False, "err": "Failed to get adaptation advice"}
-    
     # ---- Recording Tags API ----
     @api_safe({"tags": []})
     def get_recording_tags(self, rec_name):
@@ -11446,7 +11452,7 @@ function bind(){
    }
  };
  $('#focusbtn').onclick=()=>{const a=$('#app');a.classList.toggle('focus');$('#focusbtn').textContent=a.classList.contains('focus')?'Unfocus':'Focus';setTimeout(sendDock,150)};
- $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;await api.query_game_adaptation(n)};$('#randyadvice').onclick=async()=>{const r=await api.get_randy_advice();alert('Randy says: '+r.advice)};
+ $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;const r=await api.query_game_adaptation(n);if(r.ok)alert('Game adaptation advice saved!\\n\\n'+(r.adaptation||'Advice saved to file'));else alert('Failed: '+r.err)};$('#randyadvice').onclick=async()=>{const r=await api.get_randy_advice();alert('Randy says: '+r.advice)};
  $('#pk1').onclick=()=>api.pick('tl');$('#pk2').onclick=()=>api.pick('br');
  $('#openf').onclick=()=>api.open_folder();
  $('#dockbtn').onclick=async()=>{userUndock=false;manualPick=false;const r=rect();await api.dock(r[0],r[1],r[2],r[3])};

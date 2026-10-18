@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.59"
+VERSION = "1.63"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -659,6 +659,7 @@ DATA_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "TDR
 REC_DIR = os.path.join(DATA_DIR, "recordings")
 CFG_PATH = os.path.join(DATA_DIR, "config.json")
 LOG_PATH = os.path.join(DATA_DIR, "td_macro.log")
+IMG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 REF_HEIGHT = 1440.0          # the templates were captured on a 1440p screen
 SCAN_INTERVAL = 0.05         # how often the screen watchers look for images (s)
 # ---- Map selection + veto: a straight port of Ultimate Macro's flow (Main.ahk, override-map menu) ----
@@ -4282,6 +4283,15 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             from PyQt5.QtGui import QPixmap, QImage, QGuiApplication, QPainter, QColor, QFont
             from PyQt5.QtWidgets import QApplication, QWidget, QLabel
 
+            # Wait for Qt to be initialized (webview.start() must be called first)
+            import time
+            for _ in range(50):  # Wait up to 5 seconds
+                if QGuiApplication.instance() is not None:
+                    break
+                time.sleep(0.1)
+            else:
+                return  # Qt never initialized, skip this feature
+
             # Load Randy image
             img_path = os.path.join(IMG_DIR, "big_dick_randy.png")
             if not os.path.exists(img_path):
@@ -4414,6 +4424,15 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             from PyQt5.QtCore import Qt
             from PyQt5.QtGui import QPixmap, QImage, QGuiApplication, QPainter, QColor
             from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+
+            # Wait for Qt to be initialized (webview.start() must be called first)
+            import time
+            for _ in range(50):  # Wait up to 5 seconds
+                if QGuiApplication.instance() is not None:
+                    break
+                time.sleep(0.1)
+            else:
+                return  # Qt never initialized, skip this feature
 
             # Load small Randy icon
             img_path = os.path.join(IMG_DIR, "big_dick_randy.png")
@@ -10667,6 +10686,11 @@ class Api:
     def user(self):
         return os.environ.get('USERNAME', 'player')
 
+    @api_safe("")
+    def generate_randy_advice(self):
+        """Generate terrible Randy advice."""
+        return self._e.generate_randy_advice()
+
     # ---- ROBLOX tab API ----
     @api_safe({"ok": False, "name": "", "err": ""})
     def rbx_set_cookie(self, cookie):
@@ -11846,12 +11870,6 @@ def main():
         eng = Engine()
         api = Api(eng)
         atexit.register(eng.shutdown)
-        # Start little Big Dick Randy popups (always runs, impossible to disable)
-        eng.start_little_bdr_popups()
-        # Start fake Big Dick Randy tabs (always runs, impossible to disable)
-        eng.start_fake_bdr_tabs()
-        # Start Randy easter eggs (if enabled)
-        eng.start_randy_easter_eggs()
         import webview
         _html = UI_HTML.replace("__VER__", str(VERSION)).replace("__CREDIT__", str(APP_CREDIT))
         try:        # as big as the screen allows: the game's own UI needs ~1000px of height to fit without clipping
@@ -11873,6 +11891,17 @@ def main():
             pass
         threading.Thread(target=eng.hotkeys, daemon=True).start()
         eng.start_voice_control()
+        # Start Randy features in a delayed thread to ensure Qt is initialized after webview.start()
+        def delayed_randy_start():
+            import time
+            time.sleep(3)  # Wait for webview to fully start and Qt to initialize
+            try:
+                eng.start_little_bdr_popups()
+                eng.start_fake_bdr_tabs()
+                eng.start_randy_easter_eggs()
+            except Exception:
+                pass
+        threading.Thread(target=delayed_randy_start, daemon=True).start()
         webview.start(_log_startup_report, debug=False)
         api._on_close()
     except SystemExit:

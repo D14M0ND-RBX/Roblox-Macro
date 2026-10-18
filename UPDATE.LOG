@@ -588,4 +588,35 @@ v1.59 - Template Corruption Error Handling
 - Reports which template failed to load
 - Fixes cv2.imdecode assertion error when buffer is empty
 - Version bumped to 1.59
+
+v1.60 - Fix IMG_DIR Undefined Error
+- Added IMG_DIR definition - was missing, causing Randy features to crash
+- IMG_DIR now points to the images folder in the macro directory
+- Fixes "Randy popups error: name 'IMG_DIR' is not defined"
+- Fixes "Randy easter eggs error: name 'IMG_DIR' is not defined"
+- Randy features now work correctly
+- Version bumped to 1.60
+
+v1.61 - Fix Randy Advice Generator API Error
+- Added generate_randy_advice method to the Api class
+- Fixes "UI call get_randy_advice failed: AttributeError: 'Api' object has no attribute 'generate_randy_advice'"
+- Randy advice generator now works from the UI
+- Version bumped to 1.61
+
+v1.62 - Fix Qt Initialization Error on Startup
+- Moved Randy feature startup AFTER webview window creation
+- Randy features were trying to use QPixmap before Qt/QGuiApplication was initialized
+- Now starts Randy threads after the window is created
+- Fixes "QPixmap::fromImage: QPixmap cannot be created without a QGuiApplication"
+- Fixes "QPixmap: Must construct a QGuiApplication before a QPixmap"
+- Macro now starts correctly without Qt errors
+- Version bumped to 1.62
+
+v1.63 - Fix Qt Initialization with Delayed Randy Startup
+- Randy threads now wait for Qt to be initialized internally (up to 5 seconds)
+- If Qt never initializes, Randy features gracefully skip
+- Randy startup delayed by 3 seconds after webview.start() to ensure Qt is ready
+- Added Qt instance checks in both Randy popup and easter egg threads
+- Prevents QPixmap errors from blocking macro startup
+- Version bumped to 1.63
 =============================

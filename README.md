@@ -1,9 +1,84 @@
-# Diamond TD Macro  `v1.46 · Beta`
+# Diamond TD Macro  `v1.49 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.
 
-## What's New in v1.46
+## What's New in v1.49
+
+### 🔍 Preflight System
+- **Validate before starting** - Checks everything before macro begins
+- **Required images check** - Ensures all 9 TDS images exist
+- **Profile structure validation** - Verifies active profile is valid and not corrupted
+- **Recording verification** - Confirms selected recording exists (for custom mode)
+- **Roblox window check** - Ensures Roblox is accessible
+- **Resolution warning** - Warns if resolution is below recommended (1920x1080)
+- **Auto-run on start** - Option to automatically run preflight when macro starts
+- **Blocks bad starts** - Won't start macro if critical issues found
+- **Detailed reporting** - Lists all issues and warnings in log
+- **UI toggle** - "Preflight check" and "Preflight on start" in settings
+
+### 🐛 Detection Diagnostics Mode
+- **Debugging aid** - Shows why detections succeed or fail
+- **Confidence scores** - Displays match scores for each detection
+- **Accept/reject reasons** - Explains why a detection was accepted or rejected
+- **Rate-limited output** - Max 1 diagnostic message per second to avoid log spam
+- **Template name tracking** - Shows which template was being matched
+- **Helps troubleshooting** - Easy to understand why macro clicked (or didn't click)
+- **UI toggle** - "Diagnostics mode" checkbox in new Preflight & Diagnostics section
+- **Additional toggles** - "Show confidence" and "Show reason" for granular control
+
+### ↩️ One-Click Rollback
+- **Config snapshots** - Automatically saves config snapshots
+- **Keep last N snapshots** - Configurable (default: 5, max: 20)
+- **Timestamped snapshots** - `config_snapshot_YYYYMMDD_HHMMSS.json`
+- **Auto-cleanup** - Removes old snapshots beyond limit
+- **Restore via API** - Can restore from any snapshot
+- **Backup before restore** - Creates backup before restoring (safety net)
+- **List snapshots** - View all available snapshots
+- **Safe recovery** - If update breaks something, one click to go back
+- **UI toggle** - "Rollback enabled" and "Rollback snapshots" in settings
+
+### 👁️ Randy Fake Awareness
+- **Reacts to macro events** - Randy comments when you start/stop recording
+- **Profile switch reactions** - Randy notices when you change profiles
+- **Macro start/stop** - Randy watches you begin and end sessions
+- **30% reaction chance** - Randy speaks when events happen
+- **Surveillance theme** - "Randy sees you recording. He'll remember this."
+- **UI toggle** - "Fake awareness" checkbox in Randy settings
+
+### 📁 Randy's Case File
+- **Cursed lore entries** - 10 progressively horrifying case file entries
+- **Progress-based unlocks** - Each Randy sighting adds progress (0-100)
+- **Horror escalation** - Entries get worse as you progress
+- **Final entry reveals** - "CASE CLOSED. Subject has been integrated."
+- **Permanent tracking** - Progress saved in config
+- **UI toggle** - "Case file" checkbox in Randy settings
+
+### 🖥️ Randy Fake Takeover ("Hacks Your PC")
+- **Overlay name change** - Window title changes to "BIG DICK RANDY'S MACRO"
+- **Profile hijack** - Profile changes to "randy_profile"
+- **Resolution override** - Randy claims 1920x1080 is his preferred resolution
+- **Scale matching** - "Scale override: MATCHING MACRO (Randy sees everything)"
+- **Theatrical restoration** - After 3 seconds, Randy "generously" restores your settings
+- **10% trigger chance** - Only on ultra-rare Randy appearances
+- **Purely cosmetic** - Doesn't actually change files, just logs it
+- **UI toggle** - "Fake takeover" checkbox in Randy settings
+
+### 📸 Randy Sightings
+- **Capture Randy appearances** - Screenshots of Randy's overlay saved
+- **Timestamped files** - `randy_sighting_YYYYMMDD_HHMMSS.png`
+- **Auto-cleanup** - Keeps only last 10 sightings
+- **Save location** - `%APPDATA%\TDRecorder\randy_sightings\`
+- **Counter display** - "Total: X" in log
+- **UI toggle** - "Randy sightings" checkbox in Randy settings
+
+### 💎 Diamond Legacy (Secret Feature)
+- **Hidden progression system** - Unlocks automatically at certain milestones
+- **Tier-based rewards** - 5 tiers of increasing prestige
+- **Mysterious messages** - The Diamond whispers to you
+- **No settings needed** - Works silently in the background
+- **Permanent tracking** - Your legacy is remembered forever
+- *Keep playing to discover more...*
 
 ### 💾 Auto Backup System
 - **Daily automatic backups** - Backs up config and profiles every 24 hours

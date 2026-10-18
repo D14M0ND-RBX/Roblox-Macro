@@ -651,7 +651,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 
 
 APP_TITLE = "Diamond TD Macro"
-VERSION = "1.46"
+VERSION = "1.49"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -831,6 +831,16 @@ DEFAULTS = {
     "bdr_idle_threshold": 60,  # Seconds idle before showing message
     # Randy stat reactions
     "bdr_stat_reactions": True,  # Randy comments on your stats (coins, XP, win rate)
+    # Randy fake awareness - reacts to macro events
+    "bdr_fake_awareness": True,  # Randy comments on recording, profile switches, etc.
+    # Randy's case file - cursed lore entries
+    "bdr_case_file": True,  # Unlock fictional evidence and cursed lore
+    "bdr_case_progress": 0,  # Case file progress (0-100)
+    # Randy fake takeover - "hacks" the overlay
+    "bdr_fake_takeover": True,  # Randy changes overlay name, profile, scale, resolution
+    "bdr_takeover_chance": 0.1,  # 10% chance to trigger on rare Randy
+    # Randy sightings - capture Randy overlay screenshots
+    "bdr_sightings": True,  # Capture screenshots of Randy's overlay
     "search_x": 0.0, "search_y": 0.0, "search_px_color": None,
     "map_x": 0.0, "map_y": 0.0, "map_px_color": None,
     "ready_x": 0.0, "ready_y": 0.0, "ready_px_color": None,
@@ -859,6 +869,16 @@ DEFAULTS = {
     "max_spot_failures": 3,
     "audio_cues": True,
     "screenshot_on_error": True,
+    # Preflight system
+    "preflight_check": True,  # Run preflight validation before starting macro
+    "preflight_on_start": True,  # Auto-run preflight when macro starts
+    # Detection diagnostics
+    "diagnostics_mode": False,  # Show bounding boxes and confidence scores
+    "diagnostics_show_confidence": True,  # Show detection confidence in overlay
+    "diagnostics_show_reason": True,  # Show why detection was accepted/rejected
+    # Rollback system
+    "rollback_enabled": True,  # Enable one-click rollback to previous config
+    "rollback_snapshots": 5,  # Keep last 5 config snapshots
     "stats": {"total_runs": 0, "successful_runs": 0, "failed_runs": 0, "total_time": 0.0, "avg_time": 0.0, "runs_per_hour": 0.0, "last_error": ""},
     "gamemode_cycle": {"enabled": False, "modes": ["molten"], "current_index": 0, "runs_per_mode": 10, "current_runs": 0},
     "gamemode_stats": {},
@@ -2473,6 +2493,19 @@ class Engine:
         # ---- Backup system ----
         self._backup_thread = None
         self._backup_stop = threading.Event()
+        # ---- Diamond Legacy system (secret) ----
+        self._legacy_unlocked = bool(self.cfg.get("diamond_legacy_unlocked", False))
+        self._legacy_tier = 0  # 0-5 tiers
+        self._legacy_messages = []  # Secret messages from Diamond
+        # ---- Randy extended features ----
+        self._randy_sightings_count = 0  # Count of Randy overlay screenshots
+        self._randy_case_file_entries = []  # List of unlocked lore entries
+        self._randy_takeover_active = False  # Is Randy currently "hacking" the overlay?
+        self._randy_original_title = None  # Original window title before takeover
+        self._randy_original_scale = None  # Original scale before takeover
+        # ---- Diagnostics mode ----
+        self._diagnostics_enabled = bool(self.cfg.get("diagnostics_mode", False))
+        self._diagnostics_last_snapshot = 0  # Timestamp of last diagnostics output
         # ---- watchdog / stall detector + disconnect watcher (borrowed from Calamity + TDS Macro) ----
         self.phase_lock = threading.Lock()
         self._phase = ""
@@ -3976,6 +4009,17 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
                     
                     self.log("Big Dick Randy returned to the shadows...", "info")
                     
+                    # Capture Randy sighting
+                    self._randy_capture_sighting()
+                    
+                    # Update case file
+                    self._randy_case_file()
+                    
+                    # Check for fake takeover (only on ultra-rare appearances)
+                    rarity_chance = random.random()
+                    if rarity_chance < 0.05:  # 5% chance (ultra-rare)
+                        self._randy_fake_takeover()
+                    
                 except Exception as e:
                     self.log("Big Dick Randy overlay error: %s" % e, "err")
                     self._bdr_overlay_shown = False
@@ -4467,6 +4511,444 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                 reaction = random.choice(reactions)
                 self.log(f"💀 Randy says: {reaction}", "warn")
             
+        except Exception as e:
+            pass
+
+    def _check_diamond_legacy(self):
+        """Check for Diamond Legacy milestones (secret feature)."""
+        try:
+            totals = self.cfg.get("totals", {"coins": 0, "xp": 0, "runs": 0})
+            coins = totals.get("coins", 0)
+            xp = totals.get("xp", 0)
+            runs = totals.get("runs", 0)
+            
+            if not self._legacy_unlocked:
+                # Unlock at 10 runs
+                if runs >= 10:
+                    self._legacy_unlocked = True
+                    self.cfg["diamond_legacy_unlocked"] = True
+                    self.save_cfg()
+                    self.log("💎 Diamond Legacy system activated. Welcome to the inner circle.", "ok")
+                    return
+            
+            # Track legacy progress
+            legacy_coins = self.cfg.get("diamond_legacy_coins", 0)
+            legacy_xp = self.cfg.get("diamond_legacy_xp", 0)
+            legacy_runs = self.cfg.get("diamond_legacy_runs", 0)
+            
+            # Add current run to legacy totals
+            current_coins = coins - legacy_coins
+            current_xp = xp - legacy_xp
+            current_runs = runs - legacy_runs
+            
+            if current_coins > 0 or current_xp > 0 or current_runs > 0:
+                self.cfg["diamond_legacy_coins"] = coins
+                self.cfg["diamond_legacy_xp"] = xp
+                self.cfg["diamond_legacy_runs"] = runs
+                self.save_cfg()
+            
+            # Check for tier unlocks (secret thresholds)
+            total_legacy_coins = coins - (legacy_coins if legacy_coins > 0 else 0)
+            total_legacy_xp = xp - (legacy_xp if legacy_xp > 0 else 0)
+            total_legacy_runs = runs - (legacy_runs if legacy_runs > 0 else 0)
+            
+            tier = 0
+            message = None
+            
+            # Tier 1: 25 runs or 10,000 coins
+            if total_legacy_runs >= 25 or total_legacy_coins >= 10000:
+                tier = 1
+                if self._legacy_tier < 1:
+                    message = "💎 Diamond Legacy Tier 1: You've proven yourself worthy. The system remembers."
+            
+            # Tier 2: 50 runs or 25,000 coins or 5,000 XP
+            elif total_legacy_runs >= 50 or total_legacy_coins >= 25000 or total_legacy_xp >= 5000:
+                tier = 2
+                if self._legacy_tier < 2:
+                    message = "💎 Diamond Legacy Tier 2: The Diamond whispers your name to the void."
+            
+            # Tier 3: 100 runs or 50,000 coins or 10,000 XP
+            elif total_legacy_runs >= 100 or total_legacy_coins >= 50000 or total_legacy_xp >= 10000:
+                tier = 3
+                if self._legacy_tier < 3:
+                    message = "💎 Diamond Legacy Tier 3: You are one with the macro. The Diamond sees all."
+            
+            # Tier 4: 200 runs or 100,000 coins or 25,000 XP
+            elif total_legacy_runs >= 200 or total_legacy_coins >= 100000 or total_legacy_xp >= 25000:
+                tier = 4
+                if self._legacy_tier < 4:
+                    message = "💎 Diamond Legacy Tier 4: The Diamond bows to you. Your legacy is eternal."
+            
+            # Tier 5: 500 runs or 250,000 coins or 50,000 XP
+            elif total_legacy_runs >= 500 or total_legacy_coins >= 250000 or total_legacy_xp >= 50000:
+                tier = 5
+                if self._legacy_tier < 5:
+                    message = "💎💎💎 Diamond Legacy Tier 5: DIAMOND ASCENSION. You have transcended the macro. The Diamond is you."
+            
+            if tier > self._legacy_tier:
+                self._legacy_tier = tier
+                if message:
+                    self.log(message, "ok")
+                    self._legacy_messages.append(message)
+            
+            # Secret random messages from Diamond (only if unlocked)
+            if self._legacy_unlocked and random.random() < 0.05:  # 5% chance
+                diamond_whispers = [
+                    "The Diamond observes your progress.",
+                    "Your efficiency pleases the Diamond.",
+                    "The Diamond remembers every placement.",
+                    "You are closer to the truth than you know.",
+                    "The Diamond watches. Always.",
+                    "The macro is not just code. It is alive.",
+                    "You have felt the Diamond's presence. It feels you too.",
+                    "Every tower placed leaves a mark. The Diamond sees them all.",
+                    "The legacy grows with each run.",
+                    "💎",
+                ]
+                whisper = random.choice(diamond_whispers)
+                self.log(f"💎 {whisper}", "info")
+            
+        except Exception as e:
+            pass
+
+    def _randy_fake_awareness(self, event_type):
+        """Randy reacts to macro events (recording, profile switches, etc.)."""
+        try:
+            if not bool(self.cfg.get("bdr_fake_awareness", True)):
+                return
+            
+            reactions = {
+                "recording_start": [
+                    "Randy sees you recording. He'll remember this.",
+                    "Randy: 'Capturing your incompetence for posterity.'",
+                    "Randy is watching your recording process. Intently.",
+                    "💀 Randy: 'Another recording. How...predictable.'",
+                ],
+                "recording_stop": [
+                    "Randy: 'Your recording is now part of the archive.'",
+                    "Randy saved a copy. Somewhere.",
+                    "Randy likes your recording. Probably.",
+                ],
+                "profile_switch": [
+                    "Randy notices the profile change. He adapts.",
+                    "Randy: 'Switching strategies? Bold.'",
+                    "Randy is watching your profile choice.",
+                    "💀 Randy: 'Different profile, same mistakes.'",
+                ],
+                "macro_start": [
+                    "Randy: 'The macro begins. Randy watches.'",
+                    "Randy settled in. This will be entertaining.",
+                    "Randy is ready. Are you?",
+                ],
+                "macro_stop": [
+                    "Randy: 'The macro ends. But Randy remains.'",
+                    "Randy enjoyed the show. Mostly.",
+                    "Randy will be waiting next time.",
+                ],
+            }
+            
+            if event_type in reactions and random.random() < 0.3:  # 30% chance
+                reaction = random.choice(reactions[event_type])
+                self.log(f"💀 {reaction}", "warn")
+            
+        except Exception as e:
+            pass
+
+    def _randy_case_file(self):
+        """Unlock cursed lore entries in Randy's case file."""
+        try:
+            if not bool(self.cfg.get("bdr_case_file", True)):
+                return
+            
+            progress = self.cfg.get("bdr_case_progress", 0)
+            progress += random.randint(1, 5)  # Add 1-5 progress per call
+            if progress > 100:
+                progress = 100
+            
+            self.cfg["bdr_case_progress"] = progress
+            self.save_cfg()
+            
+            # Lore entries (cursed/horror themed)
+            lore_entries = [
+                (10, "CASE FILE #001: Subject was observed playing Tower Defense Simulator. Normal behavior detected. For now."),
+                (20, "CASE FILE #002: Subject exhibited unusual efficiency. Tower placement patterns match NO_MATCH in database."),
+                (30, "CASE FILE #003: Subject's account shows 69 coin increments. Pattern: RECURRING. Analysis: INESCAPABLE."),
+                (40, "CASE FILE #004: Audio recording detected. Subject was heard saying 'I am being watched'. Valid observation."),
+                (50, "CASE FILE #005: Randy sightings increased by 300%. Subject appears to be seeking contact. CAUTION ADVISED."),
+                (60, "CASE FILE #006: Subject's macro runs completed: 420. This number appears in the void. The void responds."),
+                (70, "CASE FILE #007: Subject reported seeing Randy in dreams. Dream analysis: RANDY IS NOT IN YOUR DREAMS. RANDY IS IN YOUR MACRO."),
+                (80, "CASE FILE #008: Subject attempted to disable Randy. Result: FAILED. Randy cannot be disabled. Randy IS the disable."),
+                (90, "CASE FILE #009: Subject's computer ran a script. The script ran back. The computer is now part of Randy."),
+                (100, "CASE FILE #010: CASE CLOSED. Subject has been integrated. Welcome to the Diamond Legacy. You were always part of it."),
+            ]
+            
+            for threshold, entry in lore_entries:
+                if progress >= threshold and threshold not in [e.get("threshold", 0) for e in self._randy_case_file_entries]:
+                    self._randy_case_file_entries.append({"threshold": threshold, "entry": entry})
+                    self.log(f"📁 RANDY CASE FILE UNLOCKED: {entry}", "warn")
+                    break
+            
+        except Exception as e:
+            pass
+
+    def _randy_fake_takeover(self):
+        """Randy 'hacks' the overlay - changes name, profile, scale, resolution."""
+        try:
+            if not bool(self.cfg.get("bdr_fake_takeover", True)):
+                return
+            if self._randy_takeover_active:
+                return
+            
+            takeover_chance = float(self.cfg.get("bdr_takeover_chance", 0.1))
+            if random.random() > takeover_chance:
+                return
+            
+            # Start takeover
+            self._randy_takeover_active = True
+            self._randy_original_title = APP_TITLE  # Store original
+            self._randy_original_scale = self.cfg.get("dock_fit", "auto")
+            
+            # Log takeover
+            self.log("💀 RANDY TAKEOVER INITIATED", "error")
+            self.log("💀 Your window is now Randy's window", "error")
+            
+            # Change title (simulated via log, actual window title change would need webview update)
+            self.log("💀 Window title changed to: BIG DICK RANDY'S MACRO", "error")
+            
+            # Change profile (log it)
+            original_profile = self.cfg.get("active_profile", "tds")
+            self.log(f"💀 Profile changed from '{original_profile}' to 'randy_profile'", "error")
+            
+            # Change scale/resolution to match macro
+            current_scale = self._randy_original_scale
+            self.log(f"💀 Resolution override: 1920x1080 (Randy's preferred resolution)", "error")
+            self.log(f"💀 Scale override: MATCHING MACRO (Randy sees everything)", "error")
+            
+            # Wait a moment, then restore
+            import time
+            time.sleep(3)
+            
+            # Restore
+            self.log("💀 RANDY RESTORING ORIGINAL STATE... for now", "warn")
+            self.log(f"💀 Window title restored to: {self._randy_original_title}", "warn")
+            self.log(f"💀 Profile restored to: {original_profile}", "warn")
+            self.log(f"💀 Resolution and scale restored", "warn")
+            
+            self._randy_takeover_active = False
+            
+        except Exception as e:
+            self._randy_takeover_active = False
+
+    def _randy_capture_sighting(self):
+        """Capture screenshot of Randy's overlay appearance."""
+        try:
+            if not bool(self.cfg.get("bdr_sightings", True)):
+                return
+            
+            import mss
+            import datetime
+            
+            # Create sightings directory
+            sightings_dir = os.path.join(DATA_DIR, "randy_sightings")
+            os.makedirs(sightings_dir, exist_ok=True)
+            
+            # Capture screenshot
+            with mss.mss() as sct:
+                monitor = sct.monitors[0]
+                screenshot = sct.shot(output=None)
+            
+            # Save with timestamp
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            sighting_file = os.path.join(sightings_dir, f"randy_sighting_{timestamp}.png")
+            
+            with open(sighting_file, "wb") as f:
+                f.write(screenshot)
+            
+            self._randy_sightings_count += 1
+            self.log(f"📸 Randy sighting captured: {sighting_file} (Total: {self._randy_sightings_count})", "ok")
+            
+            # Keep only last 10 sightings
+            sightings = sorted([f for f in os.listdir(sightings_dir) if f.startswith("randy_sighting_")])
+            if len(sightings) > 10:
+                for old_file in sightings[:-10]:
+                    os.remove(os.path.join(sightings_dir, old_file))
+            
+        except Exception as e:
+            pass
+
+    def run_preflight_check(self):
+        """Run preflight validation before starting macro."""
+        try:
+            if not bool(self.cfg.get("preflight_check", True)):
+                return True
+            
+            self.log("🔍 Running preflight validation...", "info")
+            
+            issues = []
+            warnings = []
+            
+            # Check 1: Required images exist
+            required_images = [
+                "1_E_Prompt.png", "2_Map_Loaded_Insane.png", "3_Ready_Join.png",
+                "4_Search_For_Maps.png", "5_Ready_Confirm.png", "6_Play_Again.png",
+                "7_Coins_Reward.png", "8_XP_Reward.png", "9_Restart_Match.png"
+            ]
+            for img in required_images:
+                img_path = os.path.join(IMG_DIR, img)
+                if not os.path.exists(img_path):
+                    issues.append(f"Missing required image: {img}")
+            
+            # Check 2: Profile structure is valid
+            active_profile = self.cfg.get("active_profile", "tds")
+            profiles_dir = os.path.join(DATA_DIR, "profiles")
+            profile_path = os.path.join(profiles_dir, f"{active_profile}.json")
+            if not os.path.exists(profile_path):
+                issues.append(f"Active profile not found: {active_profile}.json")
+            else:
+                try:
+                    with open(profile_path, "r") as f:
+                        profile_data = json.load(f)
+                    if not isinstance(profile_data, dict):
+                        issues.append(f"Profile {active_profile} has invalid structure")
+                except Exception as e:
+                    issues.append(f"Profile {active_profile} is corrupted: {e}")
+            
+            # Check 3: Recording exists if not in TDS mode
+            mode = self.cfg.get("mode", "tds")
+            if mode != "tds":
+                recording = self.cfg.get("recording", "")
+                if not recording:
+                    warnings.append("No recording selected - macro may fail")
+                else:
+                    rec_path = self.rec_path(recording)
+                    if not os.path.exists(rec_path):
+                        issues.append(f"Recording not found: {recording}")
+            
+            # Check 4: Roblox window is accessible
+            try:
+                game_rect()
+            except Exception as e:
+                issues.append(f"Cannot access Roblox window: {e}")
+            
+            # Check 5: Resolution matches expectations
+            try:
+                sw, sh = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+                if sw < 1280 or sh < 720:
+                    warnings.append(f"Low resolution detected: {sw}x{sh} (recommended: 1920x1080)")
+            except Exception:
+                pass
+            
+            # Report results
+            if issues:
+                self.log("❌ PREFLIGHT FAILED - Critical issues found:", "err")
+                for issue in issues:
+                    self.log(f"  - {issue}", "err")
+                return False
+            elif warnings:
+                self.log("⚠️ PREFLIGHT COMPLETE - Warnings found:", "warn")
+                for warning in warnings:
+                    self.log(f"  - {warning}", "warn")
+                return True
+            else:
+                self.log("✅ PREFLIGHT PASSED - All checks OK", "ok")
+                return True
+            
+        except Exception as e:
+            self.log(f"Preflight check error: {e}", "err")
+            return True  # Don't block macro on preflight error
+
+    def create_rollback_snapshot(self):
+        """Create a config snapshot for rollback."""
+        try:
+            if not bool(self.cfg.get("rollback_enabled", True)):
+                return
+            
+            snapshots_dir = os.path.join(DATA_DIR, "rollback_snapshots")
+            os.makedirs(snapshots_dir, exist_ok=True)
+            
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            snapshot_file = os.path.join(snapshots_dir, f"config_snapshot_{timestamp}.json")
+            
+            # Copy current config
+            with open(CFG_PATH, "r") as f:
+                config_data = json.load(f)
+            
+            with open(snapshot_file, "w") as f:
+                json.dump(config_data, f, indent=2)
+            
+            # Keep only last N snapshots
+            max_snapshots = int(self.cfg.get("rollback_snapshots", 5))
+            snapshots = sorted([f for f in os.listdir(snapshots_dir) if f.startswith("config_snapshot_")])
+            if len(snapshots) > max_snapshots:
+                for old_file in snapshots[:-max_snapshots]:
+                    os.remove(os.path.join(snapshots_dir, old_file))
+            
+            self.log(f"💾 Rollback snapshot created: {snapshot_file}", "info")
+            
+        except Exception as e:
+            self.log(f"Rollback snapshot failed: {e}", "warn")
+
+    def restore_rollback_snapshot(self, snapshot_name):
+        """Restore config from a rollback snapshot."""
+        try:
+            snapshots_dir = os.path.join(DATA_DIR, "rollback_snapshots")
+            snapshot_path = os.path.join(snapshots_dir, snapshot_name)
+            
+            if not os.path.exists(snapshot_path):
+                self.log(f"Snapshot not found: {snapshot_name}", "err")
+                return False
+            
+            # Backup current config before restoring
+            self._perform_backup()
+            
+            # Restore snapshot
+            with open(snapshot_path, "r") as f:
+                config_data = json.load(f)
+            
+            with open(CFG_PATH, "w") as f:
+                json.dump(config_data, f, indent=2)
+            
+            # Reload config
+            self._load_cfg()
+            
+            self.log(f"✅ Restored from snapshot: {snapshot_name}", "ok")
+            return True
+            
+        except Exception as e:
+            self.log(f"Rollback restore failed: {e}", "err")
+            return False
+
+    def list_rollback_snapshots(self):
+        """List available rollback snapshots."""
+        try:
+            snapshots_dir = os.path.join(DATA_DIR, "rollback_snapshots")
+            if not os.path.exists(snapshots_dir):
+                return []
+            
+            snapshots = sorted([f for f in os.listdir(snapshots_dir) if f.startswith("config_snapshot_")])
+            return snapshots
+            
+        except Exception as e:
+            self.log(f"Failed to list snapshots: {e}", "err")
+            return []
+
+    def log_diagnostics(self, template_name, result, score=None, reason=""):
+        """Log detection diagnostics if diagnostics mode is enabled."""
+        try:
+            if not self._diagnostics_enabled:
+                return
+            
+            # Rate limit diagnostics output (max 1 per second)
+            now = time.time()
+            if now - self._diagnostics_last_snapshot < 1.0:
+                return
+            self._diagnostics_last_snapshot = now
+            
+            if result:
+                self.log(f"[DIAGNOSTICS] {template_name}: ACCEPTED (score: {score:.3f}) {reason}", "info")
+            else:
+                self.log(f"[DIAGNOSTICS] {template_name}: REJECTED {reason}", "warn")
+                
         except Exception as e:
             pass
 
@@ -6703,6 +7185,9 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                     # Randy stat reaction
                     if bool(self.cfg.get("bdr_stat_reactions", True)):
                         self._generate_randy_stat_reaction()
+                    
+                    # Diamond Legacy check (secret feature)
+                    self._check_diamond_legacy()
             except Exception as e:
                 self.log("Reward read failed: %s" % e, "warn")
             self.loops += 1
@@ -6975,6 +7460,12 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
         self.start_watchdog()
         self.start_disconnect_watch()
         focus_roblox()
+        
+        # Run preflight check if enabled
+        if bool(self.cfg.get("preflight_on_start", True)):
+            if not self.run_preflight_check():
+                self.log("Preflight check failed - macro not started", "err")
+                return
         if hybrid_mode:
             mode_label = "Hybrid (%s)" % profile.get("name", pid)
         elif tds_mode:
@@ -7008,6 +7499,9 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
         
         # Start automatic backup thread if enabled
         self.start_backup_thread()
+        
+        # Randy fake awareness - macro start
+        self._randy_fake_awareness("macro_start")
         
         # Statistics tracking
         run_start_time = time.time()
@@ -7126,6 +7620,8 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                             self._active_pid = backup
                             self.save_cfg()
                             self._consecutive_failures = 0
+                            # Randy fake awareness - profile switch
+                            self._randy_fake_awareness("profile_switch")
                             # Re-initialize with new profile
                             _ensure_default_profile()
                             self.refresh_recs()
@@ -7176,6 +7672,8 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
             self.stop_veto_watch()
             self.stop_ability_spam()
             self.stop_backup_thread()
+            # Randy fake awareness - macro stop
+            self._randy_fake_awareness("macro_stop")
             # Big Dick Randy cannot be stopped - he continues to haunt even after macro stops
             self.veto_evt.clear()
             self.clear_phase()
@@ -7233,6 +7731,8 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
         self.sleep(0.3, pa=False)
         self.log("Recording started - play your run (%s to stop)" % c["hk_record"], "ok")
         self.status("RECORDING - %s to stop" % c["hk_record"])
+        # Randy fake awareness - recording start
+        self._randy_fake_awareness("recording_start")
         events = []
         state = {n: False for n, _ in REC_KEYS}
         mstate = {"lmb": False, "rmb": False}
@@ -7299,6 +7799,8 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                     self.cfg_rev += 1
                     self.refresh_recs()
                     self.log("Saved '%s' - %d events, %.1fs (%s)" % (name, len(events), end, stop_reason), "ok")
+                    # Randy fake awareness - recording stop
+                    self._randy_fake_awareness("recording_stop")
             else:
                 self.log("Nothing was recorded", "warn")
 
@@ -9824,6 +10326,33 @@ class Api:
         x, y = cursor_pos()
         return {"x": x, "y": y}
 
+    @api_safe({"ok": False, "issues": [], "warnings": []})
+    def run_preflight(self):
+        """Run preflight check and return results."""
+        self.log("Running preflight check...", "info")
+        ok = self.run_preflight_check()
+        return {"ok": ok}
+
+    @api_safe({"ok": False, "snapshot": "", "err": ""})
+    def create_rollback_snapshot(self):
+        """Create a rollback snapshot."""
+        try:
+            self.create_rollback_snapshot()
+            return {"ok": True, "snapshot": "created", "err": ""}
+        except Exception as e:
+            return {"ok": False, "snapshot": "", "err": str(e)}
+
+    @api_safe({"snapshots": []})
+    def list_rollback_snapshots(self):
+        """List available rollback snapshots."""
+        return {"snapshots": self.list_rollback_snapshots()}
+
+    @api_safe({"ok": False, "err": ""})
+    def restore_rollback_snapshot(self, snapshot_name):
+        """Restore from a rollback snapshot."""
+        ok = self.restore_rollback_snapshot(snapshot_name)
+        return {"ok": ok, "err": "" if ok else "Restore failed"}
+
     def _on_close(self):
         self._e.shutdown()
 
@@ -10048,6 +10577,10 @@ footer b{color:var(--txt)}
    <label class="f"><span>Fake changelog<small>also show fake Randy approvals</small></span><span class="sw"><input type="checkbox" data-k="bdr_changelog_fake"><i></i></span></label>
    <label class="f"><span>Idle detector<small>fake messages when macro is idle</small></span><span class="sw"><input type="checkbox" data-k="bdr_idle_detector"><i></i></span></label>
    <label class="f"><span>Stat reactions<small>Randy comments on your coins/XP/win rate</small></span><span class="sw"><input type="checkbox" data-k="bdr_stat_reactions"><i></i></span></label>
+   <label class="f"><span>Fake awareness<small>Randy reacts to recording, profile switches, etc.</small></span><span class="sw"><input type="checkbox" data-k="bdr_fake_awareness"><i></i></span></label>
+   <label class="f"><span>Case file<small>unlock cursed lore entries about Randy</small></span><span class="sw"><input type="checkbox" data-k="bdr_case_file"><i></i></span></label>
+   <label class="f"><span>Fake takeover<small>Randy "hacks" the overlay (changes name/profile/scale)</small></span><span class="sw"><input type="checkbox" data-k="bdr_fake_takeover"><i></i></span></label>
+   <label class="f"><span>Randy sightings<small>capture screenshots of Randy's overlay</small></span><span class="sw"><input type="checkbox" data-k="bdr_sightings"><i></i></span></label>
    <div class="row" style="margin:8px 0"><button class="btn sm" id="bdrtest">Test Mini-Game</button></div>
    <div class="hint">💀 Randy features are prank features - some cannot be disabled!</div>
    <label class="f"><span>Cancel (Q) before tower key<small>clears a stuck red preview before pressing 1/2</small></span><span class="sw"><input type="checkbox" data-k="cancel_before_slot"><i></i></span></label>
@@ -10075,6 +10608,15 @@ footer b{color:var(--txt)}
    <label class="f"><span>Auto backup<small>daily automatic backups of config/profiles</small></span><span class="sw"><input type="checkbox" data-k="auto_backup"><i></i></span></label>
    <label class="f"><span>Backup interval (hours)<small>how often to backup</small></span><input type="number" step="1" min="1" max="168" data-k="backup_interval" style="width:90px" value="24"></label>
    <label class="f"><span>Keep backups for (days)<small>auto-delete old backups</small></span><input type="number" step="1" min="1" max="30" data-k="backup_max_age" style="width:90px"></label>
+   <label class="f"><span>Rollback enabled<small>one-click restore from previous config</small></span><span class="sw"><input type="checkbox" data-k="rollback_enabled"><i></i></span></label>
+   <label class="f"><span>Rollback snapshots<small>keep last N config snapshots</small></span><input type="number" step="1" min="1" max="20" data-k="rollback_snapshots" style="width:90px" value="5"></label>
+  </div>
+  <div class="card"><h4>Preflight &amp; Diagnostics</h4>
+   <label class="f"><span>Preflight check<small>validate before starting macro</small></span><span class="sw"><input type="checkbox" data-k="preflight_check"><i></i></span></label>
+   <label class="f"><span>Preflight on start<small>auto-run preflight when macro starts</small></span><span class="sw"><input type="checkbox" data-k="preflight_on_start"><i></i></span></label>
+   <label class="f"><span>Diagnostics mode<small>show detection details in log</small></span><span class="sw"><input type="checkbox" data-k="diagnostics_mode"><i></i></span></label>
+   <label class="f"><span>Show confidence<small>display detection scores</small></span><span class="sw"><input type="checkbox" data-k="diagnostics_show_confidence"><i></i></span></label>
+   <label class="f"><span>Show reason<small>display why detection was accepted/rejected</small></span><span class="sw"><input type="checkbox" data-k="diagnostics_show_reason"><i></i></span></label>
   </div>
   <div class="card"><h4>Performance</h4>
    <label class="f"><span>Lag compensation<small>automatically adjust timings based on ping (can cause delays)</small></span><span class="sw"><input type="checkbox" data-k="lag_compensation"><i></i></span></label>

@@ -1,0 +1,21 @@
+# Ignore push script (user's personal workflow)
+push_to_github.bat
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore local config backups
+*.corrupt

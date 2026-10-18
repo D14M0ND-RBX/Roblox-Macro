@@ -364,4 +364,74 @@ v1.46 - Auto Backup System, Randy Stat Reactions Enhanced
 - 30% chance to comment when conditions are met
 - Added UI toggle for stat reactions in Randy settings section
 - Version bumped to 1.46
+
+v1.47 - Diamond Legacy (Secret Feature)
+- Added Diamond Legacy system - hidden progression tracking
+- Unlocks automatically at milestones (10 runs to start)
+- 5 tiers of increasing prestige with unique messages
+- Tracks coins, XP, and runs since unlock
+- Secret random whispers from Diamond (5% chance after each run)
+- No settings needed - runs silently in background
+- Permanent tracking stored in config
+- Messages reveal at specific thresholds
+- Tier 1: 25 runs or 10,000 coins
+- Tier 2: 50 runs or 25,000 coins or 5,000 XP
+- Tier 3: 100 runs or 50,000 coins or 10,000 XP
+- Tier 4: 200 runs or 100,000 coins or 25,000 XP
+- Tier 5: 500 runs or 250,000 coins or 50,000 XP (ascension)
+- Version bumped to 1.47
+
+v1.48 - Randy Fake Awareness, Case File, Takeover, Sightings
+- Added Randy fake awareness - reacts to macro events
+- Randy comments on recording start/stop (30% chance)
+- Randy comments on profile switches (30% chance)
+- Randy comments on macro start/stop (30% chance)
+- Added Randy's case file - cursed lore entries
+- 10 progressively horrifying case file entries
+- Progress unlocks at thresholds (10-100 progress)
+- Final entry: "CASE CLOSED. Subject has been integrated."
+- Added Randy fake takeover - "hacks" the overlay
+- Changes window title to "BIG DICK RANDY'S MACRO"
+- Changes profile to "randy_profile"
+- Logs resolution and scale overrides
+- Theatrically restores after 3 seconds
+- 10% trigger chance on ultra-rare Randy appearances
+- Purely cosmetic - doesn't actually change files
+- Added Randy sightings - capture Randy overlay screenshots
+- Saves to %APPDATA%\TDRecorder\randy_sightings\
+- Timestamped filenames: randy_sighting_YYYYMMDD_HHMMSS.png
+- Auto-cleanup - keeps only last 10 sightings
+- Counter displays total sightings in log
+- All new features have UI toggles in Randy settings
+- bdr_fake_awareness, bdr_case_file, bdr_fake_takeover, bdr_sightings
+- Version bumped to 1.48
+
+v1.49 - Preflight System, Detection Diagnostics, One-Click Rollback
+- Added preflight system - validate before starting macro
+- Checks required images (9 TDS images must exist)
+- Validates profile structure and detects corruption
+- Verifies recording exists for custom mode
+- Checks Roblox window accessibility
+- Warns if resolution is below recommended (1920x1080)
+- Auto-run on start option (preflight_on_start setting)
+- Blocks macro start if critical issues found
+- Reports all issues and warnings in log
+- Added detection diagnostics mode - debugging aid
+- Shows confidence scores for each detection
+- Shows why detection was accepted or rejected
+- Rate-limited to 1 message per second (avoids log spam)
+- Tracks template names in diagnostics output
+- Added one-click rollback system
+- Automatic config snapshots (config_snapshot_YYYYMMDD_HHMMSS.json)
+- Configurable snapshot count (default 5, max 20)
+- Auto-cleanup of old snapshots
+- Restore from any snapshot via API
+- Creates backup before restoring (safety net)
+- List all available snapshots
+- New "Preflight & Diagnostics" section in Settings UI
+- Settings: preflight_check, preflight_on_start
+- Settings: diagnostics_mode, diagnostics_show_confidence, diagnostics_show_reason
+- Settings: rollback_enabled, rollback_snapshots
+- API methods: run_preflight, create_rollback_snapshot, list_rollback_snapshots, restore_rollback_snapshot
+- Version bumped to 1.49
 =============================

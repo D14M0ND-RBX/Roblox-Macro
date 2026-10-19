@@ -690,3 +690,10 @@ v1.72 - Fix JavaScript syntax breaking UI
 - UI should now work correctly after reopening the macro
 - Version bumped to 1.72
 =============================
+
+v1.73 - Fix JavaScript syntax error breaking UI initialization
+- Fixed malformed else clause in gm-generate-steps handler
+- UI was not initializing because of JavaScript syntax error
+- Username/recordings/settings were not loading
+- Version bumped to 1.73
+=============================

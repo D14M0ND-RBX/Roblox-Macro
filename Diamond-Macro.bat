@@ -660,7 +660,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 # ==============================================================================
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.72"
+VERSION = "1.73"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -11572,7 +11572,22 @@ function bind(){
  $('#getgeminikey').onclick=()=>{window.open('https://aistudio.google.com/app/apikey','_blank');alert('After creating your API key, paste it in the field above')};
  $('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;const r=await api.query_game_adaptation(n);if(r.ok)alert('Game adaptation advice saved!\\n\\n'+(r.adaptation||'Advice saved to file'));else alert('Failed: '+r.err)};
  $('#randyadvice').onclick=async()=>{const r=await api.get_randy_advice();alert('Randy says: '+r.advice)};
- $('#gm-generate-steps').onclick=async()=>{const p=$('#gm-ai-prompt').value.trim();if(!p)return alert('Please describe what you want first');const r=await api.generate_steps_from_description(p);if(r.ok){if(r.steps){_gmSteps=r.steps;gmRenderSteps();alert('Steps generated! Review them above, then save the profile.')}else alert('No steps generated')}}else alert('Failed: '+r.err)};
+ $('#gm-generate-steps').onclick=async()=>{
+  const p=$('#gm-ai-prompt').value.trim();
+  if(!p)return alert('Please describe what you want first');
+  const r=await api.generate_steps_from_description(p);
+  if(r.ok){
+    if(r.steps){
+      _gmSteps=r.steps;
+      gmRenderSteps();
+      alert('Steps generated! Review them above, then save the profile.');
+    }else{
+      alert('No steps generated');
+    }
+  }else{
+    alert('Failed: '+r.err);
+  }
+};
  $('#pk1').onclick=()=>api.pick('tl');$('#pk2').onclick=()=>api.pick('br');
  $('#openf').onclick=()=>api.open_folder();
  $('#dockbtn').onclick=async()=>{userUndock=false;manualPick=false;const r=rect();await api.dock(r[0],r[1],r[2],r[3])};

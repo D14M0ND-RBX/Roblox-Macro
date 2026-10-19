@@ -660,7 +660,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 # ==============================================================================
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.68"
+VERSION = "1.69"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -10754,6 +10754,58 @@ class Api:
             return {"ok": True, "err": "", "adaptation": adaptation}
         return {"ok": False, "err": "Failed to get adaptation advice (check Gemini API key and settings)", "adaptation": None}
 
+    @api_safe({"ok": False, "err": "", "steps": None})
+    def generate_steps_from_description(self, description):
+        """Use Gemini to generate JSON steps from a plain English description."""
+        api_key = self._e.cfg.get("gemini_api_key", "")
+        if not api_key:
+            return {"ok": False, "err": "No Gemini API key - click 'Get free API key' button first", "steps": None}
+        
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            
+            prompt = f"""You are a macro automation assistant. Generate JSON steps for a custom game macro based on this user description:
+
+User description: {description}
+
+Available step types:
+- wait: {{"type": "wait", "seconds": 1.0}}
+- click: {{"type": "click", "x": 0.5, "y": 0.5}}
+- key_press: {{"type": "key_press", "key": "1", "times": 1}}
+- wait_image: {{"type": "wait_image", "image": "template_name", "click": false, "timeout": 30}}
+- type_text: {{"type": "type_text", "text": "message"}}
+
+Return ONLY valid JSON array of steps. No explanations, no markdown code blocks, just the JSON array.
+
+Example format:
+[
+  {{"type": "wait", "seconds": 2.0}},
+  {{"type": "click", "x": 0.5, "y": 0.5}},
+  {{"type": "key_press", "key": "1", "times": 1}}
+]
+"""
+            
+            response = model.generate_content(prompt)
+            json_text = response.text.strip()
+            
+            # Extract JSON from response
+            import json
+            json_start = json_text.find('[')
+            json_end = json_text.rfind(']') + 1
+            if json_start >= 0 and json_end > json_start:
+                json_str = json_text[json_start:json_end]
+                steps = json.loads(json_str)
+                return {"ok": True, "err": "", "steps": steps}
+            else:
+                return {"ok": False, "err": "Could not parse JSON from Gemini response", "steps": None}
+                
+        except json.JSONDecodeError as e:
+            return {"ok": False, "err": f"JSON parsing failed: {str(e)}", "steps": None}
+        except Exception as e:
+            return {"ok": False, "err": f"Gemini error: {str(e)}", "steps": None}
+
     # ---- ROBLOX tab API ----
     @api_safe({"ok": False, "name": "", "err": ""})
     def rbx_set_cookie(self, cookie):
@@ -11407,6 +11459,11 @@ footer b{color:var(--txt)}
     <label class="f"><span>Template<small>quick-start from a preset</small></span><select id="gm-template-sel" style="flex:1"><option value="">(none)</option></select></label>
     <div class="row" style="gap:8px;margin-top:8px"><button class="btn go" id="gm-save">Save profile</button><button class="btn sm" id="gm-apply-template">Apply template</button></div>
    </div>
+   <div class="card"><h4>AI Step Generator</h4>
+    <label class="f">Describe what you want in plain English<textarea id="gm-ai-prompt" placeholder="e.g., 'Click the attack button, wait 2 seconds, then press key 1 five times, then click the ready button'" style="flex:1;height:80px;resize:vertical"></textarea></label>
+    <div class="row" style="margin:8px 0"><button class="btn sm go" id="gm-generate-steps">Generate steps with Gemini</button></div>
+    <div class="hint">Gemini will convert your description into JSON steps automatically. Requires API key.</div>
+   </div>
    <div class="card" id="gm-steps-card"><h4>Step sequence</h4>
     <div class="hint" style="margin:0 0 10px">Build your loop one step at a time. The macro runs these top to bottom, then repeats.</div>
     <div id="gm-step-list" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -11503,7 +11560,7 @@ function bind(){
    }
  };
  $('#focusbtn').onclick=()=>{const a=$('#app');a.classList.toggle('focus');$('#focusbtn').textContent=a.classList.contains('focus')?'Unfocus':'Focus';setTimeout(sendDock,150)};
- $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#getgeminikey').onclick=()=>{window.open('https://aistudio.google.com/app/apikey','_blank');alert('After creating your API key, paste it in the field above')};$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;const r=await api.query_game_adaptation(n);if(r.ok)alert('Game adaptation advice saved!\\n\\n'+(r.adaptation||'Advice saved to file'));else alert('Failed: '+r.err)};$('#randyadvice').onclick=async()=>{const r=await api.get_randy_advice();alert('Randy says: '+r.advice)};
+ $('#pks').onclick=()=>api.pick_pt('search');$('#pkm').onclick=()=>api.pick_pt('map');$('#pkr').onclick=()=>api.pick_pt('ready');$('#pkv').onclick=()=>api.pick_pt('veto');$('#pkvp').onclick=()=>api.pick_pt('vpx');$('#pkrp').onclick=()=>api.pick_pt('restart_px');$('#pkrdp').onclick=()=>api.pick_pt('ready_px');$('#pkpap').onclick=()=>api.pick_pt('play_again_px');$('#mahotest').onclick=()=>api.maho_test();$('#getgeminikey').onclick=()=>{window.open('https://aistudio.google.com/app/apikey','_blank');alert('After creating your API key, paste it in the field above')};$('#gameadapt').onclick=async()=>{const n=$('#gameadaptname').value.trim();if(!n)return;const r=await api.query_game_adaptation(n);if(r.ok)alert('Game adaptation advice saved!\\n\\n'+(r.adaptation||'Advice saved to file'));else alert('Failed: '+r.err)};$('#randyadvice').onclick=async()=>{const r=await api.get_randy_advice();alert('Randy says: '+r.advice)};$('#gm-generate-steps').onclick=async()=>{const p=$('#gm-ai-prompt').value.trim();if(!p)return alert('Please describe what you want first');const r=await api.generate_steps_from_description(p);if(r.ok){if(r.steps){_gmSteps=r.steps;gmRenderSteps();alert('Steps generated! Review them above, then save the profile.')}else alert('No steps generated')}}else alert('Failed: '+r.err)};
  $('#pk1').onclick=()=>api.pick('tl');$('#pk2').onclick=()=>api.pick('br');
  $('#openf').onclick=()=>api.open_folder();
  $('#dockbtn').onclick=async()=>{userUndock=false;manualPick=false;const r=rect();await api.dock(r[0],r[1],r[2],r[3])};

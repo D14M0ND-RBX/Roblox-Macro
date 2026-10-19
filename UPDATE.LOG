@@ -664,3 +664,14 @@ v1.68 - Add Get API Key Button
 - Made it easier for users to get and set up Gemini API key
 - Version bumped to 1.68
 =============================
+
+v1.69 - Add AI Step Generator for Custom Profiles
+- Added AI Step Generator in Game tab
+- Users can describe what they want in plain English
+- Gemini converts description to JSON steps automatically
+- No need to manually write JSON anymore
+- Added textarea for description input
+- Added "Generate steps with Gemini" button
+- Generated steps appear in the step list for review
+- Version bumped to 1.69
+=============================

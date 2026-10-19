@@ -660,7 +660,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 # ==============================================================================
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.70"
+VERSION = "1.71"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -817,7 +817,7 @@ DEFAULTS = {
     "discord_webhook": "",  # Discord webhook URL for notifications - NOT IMPLEMENTED
     "discord_screenshots": False,  # Include screenshots in Discord notifications - NOT IMPLEMENTED
     "map_database": False,  # Enable map strategy database - NOT IMPLEMENTED
-    "gemini_advisor": False,  # Enable Gemini 1.5 Flash AI advisor
+    "gemini_advisor": False,  # Enable Gemini 3.8 Flash AI advisor
     "gemini_api_key": "",  # Gemini API key
     "ability_spam": False,  # Automatically spam tower abilities when available
     "ability_spam_interval": 0.5,  # Interval between ability spams (seconds)
@@ -3752,7 +3752,7 @@ class Engine:
         self.log("Profile switched successfully", "ok")
     
     def gemini_suggest_improvements(self, stats):
-        """Ask Gemini 1.5 Flash for macro improvements after each match."""
+        """Ask Gemini 3.8 Flash for macro improvements after each match."""
         if not bool(self.cfg.get("gemini_advisor", False)):
             return
         
@@ -3765,7 +3765,7 @@ class Engine:
             import google.generativeai as genai
             
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3.8-flash')
             
             # Build prompt with stats
             prompt = f"""I'm running a Tower Defense Simulator macro. Here are my statistics from the last session:
@@ -3814,7 +3814,7 @@ Please suggest 3 specific improvements to make the macro more efficient or profi
             import google.generativeai as genai
             
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3.8-flash')
             
             # Build prompt for game adaptation
             prompt = f"""I'm creating a macro automation script for the game "{game_name}". 
@@ -4677,7 +4677,7 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             pass
 
     def _get_randy_changelog_decision(self, feature_description):
-        """Get Randy's (Gemini 1.5 Flash) decision on a feature approval."""
+        """Get Randy's (Gemini 3.8 Flash) decision on a feature approval."""
         try:
             if not bool(self.cfg.get("bdr_changelog_gemini", True)):
                 return None
@@ -4688,7 +4688,7 @@ Keep responses technical and focused on UI automation. If you don't know the gam
             
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3.8-flash')
             
             prompt = f"""You are Big Dick Randy, a mysterious and powerful entity that approves or rejects features for a Roblox macro.
             
@@ -10764,7 +10764,7 @@ class Api:
         try:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3.8-flash')
             
             prompt = f"""You are a macro automation assistant. Generate JSON steps for a custom game macro based on this user description:
 

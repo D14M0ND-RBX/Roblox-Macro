@@ -1,4 +1,4 @@
-# Diamond-Macro  `v1.70 · Beta`
+# Diamond-Macro  `v1.71 · Beta`
 
 A Windows macro recorder/player for Roblox tower defense.
 <!-- GitHub auto-push enabled --> Record a run **once**, then let it replay forever. It handles the lobby intro, the replay, the Play Again click and the next game on its own, and it logs the coins and XP you earn.

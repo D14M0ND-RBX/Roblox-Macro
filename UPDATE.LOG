@@ -697,3 +697,10 @@ v1.73 - Fix JavaScript syntax error breaking UI initialization
 - Username/recordings/settings were not loading
 - Version bumped to 1.73
 =============================
+
+v1.74 - Fix template loading to skip empty placeholder templates
+- Added check to skip empty/placeholder templates before decoding
+- speed_arrow and speed_2x were empty strings causing OpenCV errors
+- Pixel detection should now work correctly
+- Version bumped to 1.74
+=============================

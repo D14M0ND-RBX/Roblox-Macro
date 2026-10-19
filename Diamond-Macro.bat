@@ -660,7 +660,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 # ==============================================================================
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.73"
+VERSION = "1.74"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -2085,6 +2085,8 @@ def _images_dir():
 def load_templates():
     global TPL_BASE
     for k, b in TEMPLATES.items():
+        if not b or not b.strip():
+            continue  # Skip empty/placeholder templates
         try:
             arr = np.frombuffer(base64.b64decode(b), dtype=np.uint8)
             img = cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)

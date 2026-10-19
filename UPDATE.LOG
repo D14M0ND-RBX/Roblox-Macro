@@ -683,3 +683,10 @@ v1.71 - Update Gemini Model to 3.8 Flash
 - AI features now use the latest gemini-3.8-flash model
 - Version bumped to 1.71
 =============================
+
+v1.72 - Fix JavaScript syntax breaking UI
+- Fixed JavaScript event handlers that were breaking the UI
+- Split long one-line JavaScript into multiple lines for readability
+- UI should now work correctly after reopening the macro
+- Version bumped to 1.72
+=============================

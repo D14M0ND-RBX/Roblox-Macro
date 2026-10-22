@@ -719,3 +719,10 @@ v1.76 - Revert template optimization (was breaking adaptation)
 - Adaptation and verification now work correctly again
 - Version bumped to 1.76
 =============================
+
+v1.77 - Add pixel check logging to debug restart/play_again detection
+- Added warning when pixel X/Y not set
+- Added warning when color distance exceeds tolerance
+- Makes it easier to see why pixel checks fail
+- Version bumped to 1.77
+=============================

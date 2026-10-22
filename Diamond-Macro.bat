@@ -660,7 +660,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 # ==============================================================================
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.76"
+VERSION = "1.77"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -6343,6 +6343,7 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
             tol = int(self.cfg.get(px_name + "_tol", self.cfg.get("px_tol", 12)))
             rgb = self._px_rgb(px_name)
             if rgb is None:
+                self.log("Pixel %s: not picked (X/Y not set)", px_name, "warn")
                 return False
             # Use auto-learned color if available, else default
             target = self.cfg.get(px_name + "_color", default_color)
@@ -6353,6 +6354,8 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
                     px_name, self._hex(rgb), self._hex(target), d, tol), "info")
             if d <= tol:
                 return True
+            self.log("Pixel %s: distance %d > tolerance %d (RGB %s vs target %s)" % (
+                px_name, d, tol, self._hex(rgb), self._hex(target)), "warn")
             return False
         except Exception as e:
             self.log("Pixel check failed for %s: %s" % (px_name, e), "warn")

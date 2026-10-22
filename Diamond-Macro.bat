@@ -660,7 +660,7 @@ _maho_is_showing = False  # Global flag to track if Mahoraga is currently showin
 # ==============================================================================
 
 APP_TITLE = "Diamond-Macro"
-VERSION = "1.75"
+VERSION = "1.76"
 APP_CREDIT = "Diamond"          # shown in the footer ("Made by ...") - change to whatever you want
 # GitHub auto-push enabled
 FROZEN = bool(getattr(sys, "frozen", False))
@@ -2063,7 +2063,6 @@ TPL_THR = {                                # per-template minimum threshold (ove
 }
 
 TPL_BASE = {}
-TPL_SMALL = {}  # Pre-computed half-size templates for two-stage matching
 
 
 def _images_dir():
@@ -2084,8 +2083,7 @@ def _images_dir():
 
 
 def load_templates():
-    global TPL_BASE, TPL_SMALL
-    TPL_SMALL = {}
+    global TPL_BASE
     for k, b in TEMPLATES.items():
         if not b or not b.strip():
             continue  # Skip empty/placeholder templates
@@ -2094,9 +2092,6 @@ def load_templates():
             img = cv2.imdecode(arr, cv2.IMREAD_GRAYSCALE)
             if img is not None and img.size:
                 TPL_BASE[k] = img
-                # Pre-compute half-size template for two-stage matching
-                small = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                TPL_SMALL[k] = small
             else:
                 file_log(f"WARNING: Template '{k}' could not be decoded (corrupted or invalid)", "warn")
         except Exception as e:
@@ -2115,8 +2110,6 @@ def load_templates():
                     tpl = cv2.imread(full, cv2.IMREAD_GRAYSCALE)
                     if tpl is not None and tpl.size:
                         TPL_BASE[key] = tpl
-                        small = cv2.resize(tpl, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                        TPL_SMALL[key] = small
                 except Exception:
                     pass
         except Exception:
@@ -2147,7 +2140,7 @@ def _load_profile_images(pid):
         file_log("Profile images loaded: %d from '%s'" % (loaded, pid), "info")
 
 
-def match(gray, tpl, thr, small_tpl=None):
+def match(gray, tpl, thr):
     # returns (center_x, center_y, score) in gray coordinates, or None
     th, tw = tpl.shape[:2]
     H, W = gray.shape[:2]
@@ -2155,7 +2148,7 @@ def match(gray, tpl, thr, small_tpl=None):
         return None
     if H * W > 600000 and min(th, tw) >= 20:
         sg = cv2.resize(gray, (W // 2, H // 2), interpolation=cv2.INTER_AREA)
-        st = small_tpl if small_tpl is not None else cv2.resize(tpl, (max(1, tw // 2), max(1, th // 2)), interpolation=cv2.INTER_AREA)
+        st = cv2.resize(tpl, (max(1, tw // 2), max(1, th // 2)), interpolation=cv2.INTER_AREA)
         r = cv2.matchTemplate(sg, st, cv2.TM_CCOEFF_NORMED)
         _, mx, _, ml = cv2.minMaxLoc(r)
         if mx < min(COARSE_GATE, thr - 0.08):
@@ -2848,7 +2841,7 @@ class Engine:
             th, tw = t.shape[:2]
             if H < th or W < tw:
                 continue
-            m = match(gray, t, thr, TPL_SMALL.get(name))
+            m = match(gray, t, thr)
             if m and (best is None or m[2] > best[2]):
                 best = (reg["left"] + m[0], reg["top"] + m[1], m[2])
                 bm = mult
@@ -2871,7 +2864,7 @@ class Engine:
                 th, tw = t.shape[:2]
                 if H < th or W < tw:
                     continue
-                m = match(gray, t, thr, TPL_SMALL.get(name))
+                m = match(gray, t, thr)
                 if m and (best is None or m[2] > best[2]):
                     best = (reg["left"] + m[0], reg["top"] + m[1], m[2])
                     best_name = name
@@ -7653,7 +7646,7 @@ Respond with either "APPROVED" or "REJECTED" followed by a brief Randy-style com
             for mu, tt in self._iter_tpls(tname):
                 if gray.shape[0] < tt.shape[0] or gray.shape[1] < tt.shape[1]:
                     continue
-                mm_ = match(gray, tt, 0.72, TPL_SMALL.get(tname))
+                mm_ = match(gray, tt, 0.72)
                 if mm_ and (m is None or mm_[2] > m[2]):
                     m, t, sce = mm_, tt, sc * mu
                     if mm_[2] >= 0.84:

@@ -712,3 +712,10 @@ v1.75 - Optimize template matching with pre-resized templates
 - Image search should now be much faster
 - Version bumped to 1.75
 =============================
+
+v1.76 - Revert template optimization (was breaking adaptation)
+- Reverted v1.75's pre-resized template optimization
+- Incompatible with scaling system - broke placement verification
+- Adaptation and verification now work correctly again
+- Version bumped to 1.76
+=============================
